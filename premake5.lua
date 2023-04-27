@@ -70,8 +70,8 @@ project "AF"
 		objdir ("bin-int/%{cfg.buildcfg}-x64/%{prj.name}")
 		
 		
-project "Net"
-	location "Net"
+project "ANet"
+	location "ANet"
 	kind "StaticLib"
 	language "C++"
 		
@@ -163,21 +163,67 @@ project "PooQuest"
 		targetdir ("bin/%{cfg.buildcfg}-x64/%{prj.name}")
 		objdir ("bin-int/%{cfg.buildcfg}-x64/%{prj.name}")
 
-project "ProjectA"
-	location "ProjectA"
+project "ProjectAClient"
+	location "ProjectAClient"
 	kind "ConsoleApp"
 	language "C++"
 		
 	files
 	{
-		"%{prj.name}/Client/**.h",
-		"%{prj.name}/Client/**.cpp",
-		"%{prj.name}/Server/**.h",
-		"%{prj.name}/Server/**.cpp"
+		"%{prj.name}/src/**.h",
+		"%{prj.name}/src/**.cpp"
 	}
 	
 	includedirs
 	{
+		"ANet/libs/asio/include",
+		"ANet/src",
+		"AF/src",
+		"AF/include",
+		"AF/include/GLFW/include",
+		"AF/include/GLAD/include",
+		"AF/include/freetype",
+		"AF/include/Soloud",
+		"AF/include/spdlog/include",
+		"ProjectAClient/src"
+	}
+
+	links
+	{
+		"AF"
+	}	
+
+	filter "system:windows"
+		staticruntime "Off"
+		systemversion "latest"
+
+	filter "configurations:Debug"
+		defines "DEBUG"
+		symbols "On"
+		
+	filter "configurations:Release"
+		defines "NDEBUG"
+		optimize "On"
+	
+	filter "architecture:x64"
+		targetdir ("bin/%{cfg.buildcfg}-x64/%{prj.name}")
+		objdir ("bin-int/%{cfg.buildcfg}-x64/%{prj.name}")
+
+project "ProjectAServer"
+	location "ProjectAServer"
+	kind "ConsoleApp"
+	language "C++"
+		
+	files
+	{
+		"%{prj.name}/src/**.h",
+		"%{prj.name}/src/**.cpp"
+	}
+	
+	includedirs
+	{
+		"ANet/libs/asio/include",
+		"ANet/src",
 		"AF/src",
 		"AF/include",
 		"AF/include/GLFW/include",
