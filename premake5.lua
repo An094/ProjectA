@@ -1,6 +1,7 @@
 workspace "ProjectA"
 	architecture "x64"
 	startproject "ProjectA"
+	cppdialect "C++17"
 	
 	configurations
 	{

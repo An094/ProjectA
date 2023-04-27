@@ -40,6 +40,15 @@ namespace EngineCore
 		{
 			std::getline(ss, strtmp, '\n');
 			strtmp = strtmp.substr(0, strtmp.size());
+			// Remove newline characters from string in C++
+			strtmp.erase(std::remove_if(strtmp.begin(),
+				strtmp.end(),
+				[](auto ch)
+				{
+					return (ch == '\n' ||
+						ch == '\r');
+				}),
+				strtmp.end());
 			AddModel(strtmp);
 		}
 		std::getline(ss, strtmp, '\n');
@@ -48,6 +57,15 @@ namespace EngineCore
 		{
 			std::getline(ss, strtmp, '\n');
 			strtmp = strtmp.substr(0, strtmp.size());
+			// Remove newline characters from string in C++
+			strtmp.erase(std::remove_if(strtmp.begin(),
+				strtmp.end(),
+				[](auto ch)
+				{
+					return (ch == '\n' ||
+						ch == '\r');
+				}),
+				strtmp.end());
 			AddShader(strtmp);
 		}
 		m_Soloud = SoLoud::Soloud();
