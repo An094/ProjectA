@@ -2,9 +2,9 @@
 .vs/
 x64/
 Debug/
-GameEngine/bin/
-GameEngine/x64/
-Sandbox/x64/
+AF/bin/
+AF/x64/
+PooQuest/x64/
 bin/
 bin-int/
 
