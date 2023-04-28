@@ -1,9 +1,5 @@
 #pragma once
-#include "Manager/GameStateBase.h"
-#include "Manager/GameStateMachine.h"
-#include "Objects/Sprite2D.h"
-#include "Objects/Button.h"
-#include "Manager/ResourceManager.h"
+#include "MapManager.h"
 
 using namespace EngineCore;
 
@@ -26,8 +22,7 @@ public:
 	void HandleTouchEvents(int x, int y, bool bIsPressed) override {};
 
 private:
-	std::shared_ptr<Sprite2D> m_background;
-	std::vector<std::shared_ptr<Sprite2D>> m_borders;
-	std::vector<std::shared_ptr<Cloud>> m_clouds;
-	std::vector<std::shared_ptr<Platformer>> m_platformers;
+	std::shared_ptr<MapManager> m_mapManager;
+	std::shared_ptr<Button> m_leftButton;
+	std::shared_ptr<Button> m_rightButton;
 };
