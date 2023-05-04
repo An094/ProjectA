@@ -73,8 +73,13 @@ namespace EngineCore
 		ebo->Unbind();
 	}
 
-	void Sprite2D::SetPosition(float xpos, float ypos)
+	void Sprite2D::SetPosition(float xpos, float ypos, YAxisPlace yAxisPlace)
 	{
+		////[temp]
+		if (yAxisPlace == YAxisPlace::Bottom)
+		{
+			ypos = heightScreen - ypos;
+		}
 		m_Position = glm::vec2(xpos, ypos);
 		glm::vec2 temp;
 		temp.x = (xpos - widthScreen * 0.5f) * 2.0f / widthScreen;
@@ -82,8 +87,13 @@ namespace EngineCore
 		m_TransMatrix = glm::translate(identifyMatrix, glm::vec3(temp.x, temp.y, 0.0f));
 	}
 
-	void Sprite2D::SetPosition(glm::vec2 pos)
+	void Sprite2D::SetPosition(glm::vec2 pos, YAxisPlace yAxisPlace)
 	{
+		////[temp]
+		if (yAxisPlace == YAxisPlace::Bottom)
+		{
+			pos.y = heightScreen - pos.y;
+		}
 		m_Position = pos;
 		glm::vec2 temp;
 		temp.x = (pos.x - widthScreen * 0.5f) * 2.0f / widthScreen;

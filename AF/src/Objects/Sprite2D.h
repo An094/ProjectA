@@ -4,6 +4,12 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
+enum class YAxisPlace
+{
+	Top = 0,
+	Bottom
+};
+
 namespace EngineCore
 {
 	class Model;
@@ -45,8 +51,8 @@ namespace EngineCore
 		}
 
 		//Setter
-		void SetPosition(float xpos, float ypos);
-		void SetPosition(glm::vec2);
+		void SetPosition(float xpos, float ypos, YAxisPlace yAxisPlace = YAxisPlace::Top);
+		void SetPosition(glm::vec2, YAxisPlace yAxisPlace = YAxisPlace::Top);
 
 		void SetSize(int width, int height);
 

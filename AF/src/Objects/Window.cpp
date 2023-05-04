@@ -100,8 +100,13 @@ namespace EngineCore
 		// Main while loop
 		while (!glfwWindowShouldClose(m_window))
 		{
-			currentTime = (float)glfwGetTime();
+			currentTime = static_cast<float>(glfwGetTime());
 			deltaTime = currentTime - lastTime;
+			GLfloat frameDuration = 1.0f / static_cast<float>(m_frameRate);
+			if (deltaTime < frameDuration)
+			{
+				continue;
+			}
 			lastTime = currentTime;
 
 			Clear();

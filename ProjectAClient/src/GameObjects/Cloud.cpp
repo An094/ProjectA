@@ -25,7 +25,7 @@ Cloud::Cloud(const std::string& i_textureFile, glm::vec2 i_pos, int i_width, int
 void Cloud::LoadResource()
 {
 	m_sprite = std::make_shared<Sprite2D>(m_textureFile);
-	m_sprite->SetPosition(m_position);
+	m_sprite->SetPosition(m_position, YAxisPlace::Bottom);
 	m_sprite->SetSize(m_width, m_height);
 }
 
@@ -33,7 +33,7 @@ void Cloud::SetPosition(float i_xPos, float i_yPos)
 {
 	m_position.x = i_xPos;
 	m_position.y = i_yPos;
-	m_sprite->SetPosition(i_xPos, i_yPos);
+	m_sprite->SetPosition(i_xPos, i_yPos, YAxisPlace::Bottom);
 }
 
 void Cloud::SetPosition(glm::vec2 i_position)
@@ -48,7 +48,7 @@ void Cloud::Render()
 
 void Cloud::Update(float i_deltaTime)
 {
-	if (m_position.x < -50.0f)
+	if (m_position.x < -100.0f)
 	{
 		m_position.x = 1000.0f;
 	}

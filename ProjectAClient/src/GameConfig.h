@@ -5,3 +5,6 @@
 #define NUMB_PLATFORMER 4
 #define HEIGHT_OF_GROUND 2
 #define MARGIN_SIZE 80
+#define WIDTH 720
+#define HEIGHT 384
+#define GRAVITY -1.2f

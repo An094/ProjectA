@@ -18,8 +18,8 @@ public:
 	void Draw() override;
 	void Pause() override {};
 
-	void HandleKeyEvents(int key, bool bIsPressed) override {};
-	void HandleTouchEvents(int x, int y, bool bIsPressed) override {};
+	void HandleKeyEvents(int key, bool bIsPressed) override;
+	void HandleTouchEvents(int x, int y, bool bIsPressed) override;
 
 private:
 	std::shared_ptr<MapManager> m_mapManager;

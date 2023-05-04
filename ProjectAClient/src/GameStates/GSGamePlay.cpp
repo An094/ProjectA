@@ -18,3 +18,17 @@ void GSGamePlay::Update(float i_delta)
 {
 	m_mapManager->UpdateScene(i_delta);
 }
+
+void GSGamePlay::HandleKeyEvents(int key, bool bIsPressed)
+{
+	if (bIsPressed)
+	{
+		m_mapManager->Keyboard_Down(key);
+	}
+	else
+	{
+		m_mapManager->Keyboard_Up(key);
+	}
+}
+void GSGamePlay::HandleTouchEvents(int x, int y, bool bIsPressed)
+{}

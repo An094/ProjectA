@@ -2,8 +2,8 @@
 #include "GameStates/GSGamePlay.h"
 
 //TO DO: move global variable to another position
-GLint widthScreen = 880;
-GLint heightScreen = 464;
+GLint widthScreen = 720;
+GLint heightScreen = 384;
 
 int main()
 {
