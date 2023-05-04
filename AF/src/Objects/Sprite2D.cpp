@@ -129,4 +129,9 @@ namespace EngineCore
 	{
 		m_Texture = newTexture;
 	}
+
+	void Sprite2D::Rotate(float angle)
+	{
+		m_RotateMatrix = glm::rotate(identifyMatrix, angle, glm::vec3(0.0f, 0.0f, 0.1f));
+	}
 }

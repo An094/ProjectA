@@ -21,7 +21,7 @@ Frog::Frog(int i_player, /*std::shared_ptr<MapManager> i_mapManager*/MapManager*
 	:m_mapManager(i_mapManager)
 {
 	Player = i_player;
-	dir = static_cast<FaceTo>(1 - i_player);
+	dir = 1 - i_player;
 	Anim = 0;// 0 - sit, 1 - jump
 	float Offset = 11.0f * CELL_SIZE * (Player == 0 ? -1 : 1);
 	x = WIDTH / 2 + Offset;
@@ -37,24 +37,79 @@ Frog::Frog(int i_player, /*std::shared_ptr<MapManager> i_mapManager*/MapManager*
 void Frog::UpdateImage()
 {
 	m_sprite = m_sprites[Player][static_cast<int>(dir)][Anim];
-	//m_sprite->SetSize(54, 48);
 }
 
 void Frog::UpdatePosition()
 {
-	//m_sprites[Player][static_cast<int>(dir)][Anim]->Draw();
 	m_sprite->SetPosition(x + 24, y + 24, YAxisPlace::Bottom);
 }
 
 void Frog::Draw()
 {
 	m_sprite->Draw();
+	if (!m_lines.empty())
+	{
+		for (auto it : m_lines)
+		{
+			it.Draw();
+		}
+	}
 }
 
 void Frog::Update(float i_deltaTime)
 {
+	m_lines.clear();
+	if (!isJumping)
+	{
+		if (isJumpPressed)
+		{
+			Prepare_Start();
+		}
+		else
+		{
+			Prepare_End();
+		}
+	}
+	if (!isJumping)
+	{
+		if (Prepare_stt > 0)
+		{
+			if (Prepare_stt == 2)
+			{
+				Prepare_stt = 0;
+				Jump();
+			}
+			else
+			{
+				Angle += Map_offset[Angle_Drt];
+				Check_Angle func = Check_Angle_Pointer[dir][Angle_Drt];
 
-	if (isJumping)
+				if ((this->*func)(Angle))
+				{
+					Angle_Drt = 1 - Angle_Drt;
+				}
+
+				float Angle2 = Angle / RAD;
+				float x2 = x, y2 = y + 4.0f, vx2, vy2;
+				vx2 =
+					cos(Angle2) * 4 + (dir == 0 ? Angle2 - PI : Angle2) * 9;
+				vy2 = sin(Angle2) * 21;
+				vx = vx2;
+				vy = vy2;
+
+				for (int i = 0; i < 18; i++) {
+					x2 += vx2;
+					y2 += vy2;
+					if (i % 3 == 2) {
+						Angle2 = atan2(vy2, vx2) * RAD;
+						m_lines.push_back(Line(Player, x2, y2, Angle2));
+					}
+					vy2 += GRAVITY;
+				}
+			}
+		}
+	}
+	else
 	{
 		float y_old = y;
 		x += vx;
@@ -82,6 +137,18 @@ void Frog::Update(float i_deltaTime)
 				UpdateImage();
 			}
 		}
+
+		Check_Boundary func = Check_Boundary_Pointer[dir];
+
+		if ((this->*func)(x))
+		{
+			dir = 1 - dir;
+			vx = -vx;
+			UpdateImage();
+		}
+
+
+
 		UpdatePosition();
 	}
 }
@@ -128,13 +195,33 @@ void Frog::Keyboard_Up(int key)
 
 void Frog::Key_Down()
 {
-	isJumping = true;
+	//isJumping = true;
+	isJumpPressed = true;
 }
 
 void Frog::Key_Up()
 {
-	isJumping = false;
-	vx = 10.0f;
-	vy = 15.0f;
+	//isJumping = false;
+	isJumpPressed = false;
+	//vx = 10.0f;
+	//vy = 15.0f;
 	Jump();
+}
+
+void Frog::Prepare_Start()
+{
+	if (Prepare_stt == 0)
+	{
+		Prepare_stt = 1;
+		Angle_Drt = dir;
+		Angle = Map_Base_Angle[dir];
+	}
+}
+
+void Frog::Prepare_End()
+{
+	if (Prepare_stt == 1)
+	{
+		Prepare_stt = 2;
+	}
 }

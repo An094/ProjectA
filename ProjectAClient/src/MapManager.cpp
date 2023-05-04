@@ -158,7 +158,7 @@ void MapManager::Keyboard_Down(int i_key)
 		m_frogs[0]->Key_Down();
 		break;
 	}
-	case GLFW_KEY_KP_ENTER:
+	case GLFW_KEY_ENTER:
 	{
 		m_frogs[1]->Key_Down();
 		break;
@@ -177,7 +177,7 @@ void MapManager::Keyboard_Up(int i_key)
 		m_frogs[0]->Key_Up();
 		break;
 	}
-	case GLFW_KEY_KP_ENTER:
+	case GLFW_KEY_ENTER:
 	{
 		m_frogs[1]->Key_Up();
 		break;

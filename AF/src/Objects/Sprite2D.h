@@ -59,6 +59,8 @@ namespace EngineCore
 		void ChangeTexture(const std::string& newTexture);
 		void ChangeTexture(std::shared_ptr<Texture> newTexture);
 
+		void Rotate(float angle);
+
 		void Init();
 		virtual void Draw();
 		virtual void Update(float deltaTime){}

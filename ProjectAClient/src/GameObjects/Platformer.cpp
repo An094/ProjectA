@@ -1,5 +1,5 @@
 #include "Platformer.h"
-
+#include "GameConfig.h"
 using namespace EngineCore;
 
 Platformer::Platformer(const std::string& i_textureFile)
