@@ -111,17 +111,47 @@ MapManager::MapManager(const std::string& i_fileName)
 		auto frog = std::make_shared<Frog>(i,this);
 		m_frogs.push_back(std::move(frog));
 	}
-
+	
 }
 
 
 void MapManager::UpdateScene(float i_delaTime)
 {
+	timerCount++;
+	if (timerCount == 90)
+	{
+		timerCount = 0;
+		if (m_flies.size() < MAX_FLIES)
+		{
+			bool check;
+			int Region;
+			do
+			{
+				check = false;
+				Region = rand() % 6;
+				for (auto fly : m_flies)
+				{
+					if (fly->Region == Region)
+					{
+						check = true;
+						break;
+					}
+				}
+			} while (check);
+			m_flies.push_back(std::make_shared<Fly>(spawnPoints[Region].x, spawnPoints[Region].y, Region));
+		}
+	}
+
+
 	for (auto it : m_clouds)
 	{
 		it->Update(i_delaTime);
 	}
 	for (auto it : m_frogs)
+	{
+		it->Update(i_delaTime);
+	}
+	for (auto it : m_flies)
 	{
 		it->Update(i_delaTime);
 	}
@@ -144,6 +174,10 @@ void MapManager::Render()
 		//it->Draw();
 	}
 	for (auto it : m_frogs)
+	{
+		it->Draw();
+	}
+	for (auto it : m_flies)
 	{
 		it->Draw();
 	}

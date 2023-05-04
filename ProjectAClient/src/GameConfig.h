@@ -12,3 +12,4 @@
 #define BOUNDARY_RIGHT 720
 #define RAD 57.295780
 #define PI 3.141592
+#define MAX_FLIES 2

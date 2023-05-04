@@ -1,5 +1,6 @@
 #include "Frog.h"
 #include "MapManager.h"
+#include "Fly.h"
 void Frog::InitializeSprites()
 {
 	for (int i = 0; i < 2; ++i)
@@ -147,6 +148,19 @@ void Frog::Update(float i_deltaTime)
 			UpdateImage();
 		}
 
+		std::vector<std::shared_ptr<Fly>> flies = m_mapManager->GetFlies();
+		auto it  = flies.begin();
+		while (it != flies.end()) {
+			if (it->get()->IsCaught(x, y)) {
+				it = flies.erase(it);
+				Score++;
+
+			}
+			else
+			{
+				it++;
+			}
+		}
 
 
 		UpdatePosition();
