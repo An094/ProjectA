@@ -1,5 +1,5 @@
 #include "Frog.h"
-#include "MapManager.h"
+#include "GameController.h"
 #include "Fly.h"
 void Frog::InitializeSprites()
 {
@@ -18,8 +18,8 @@ void Frog::InitializeSprites()
 	}
 }
 
-Frog::Frog(int i_player, /*std::shared_ptr<MapManager> i_mapManager*/MapManager* i_mapManager)
-	:m_mapManager(i_mapManager)
+Frog::Frog(int i_player, GameController* i_controller)
+	:m_controller(i_controller)
 {
 	Player = i_player;
 	dir = 1 - i_player;
@@ -127,9 +127,9 @@ void Frog::Update(float i_deltaTime)
 			int col2 = (x + 9.0f) / CELL_SIZE;
 			int row_old = (y_old) / CELL_SIZE;
 			int row = (y) / CELL_SIZE;
-			if (!m_mapManager->m_tileMatrix[row_old][col1]
-				&& !m_mapManager->m_tileMatrix[row_old][col2]
-				&& (m_mapManager->m_tileMatrix[row][col1] || m_mapManager->m_tileMatrix[row][col2]))
+			if (!m_controller->m_tileMatrix[row_old][col1]
+				&& !m_controller->m_tileMatrix[row_old][col2]
+				&& (m_controller->m_tileMatrix[row][col1] || m_controller->m_tileMatrix[row][col2]))
 			{
 				isJumping = false;
 				y = (row + 1) * CELL_SIZE;
@@ -149,7 +149,7 @@ void Frog::Update(float i_deltaTime)
 			UpdateImage();
 		}
 
-		std::vector<std::shared_ptr<Fly>>& flies = m_mapManager->GetFlies();
+		std::vector<std::shared_ptr<Fly>>& flies = m_controller->GetFlies();
 		auto it  = flies.begin();
 		while (it != flies.end()) {
 			if (it->get()->IsCaught(x, y)) {

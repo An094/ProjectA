@@ -4,30 +4,30 @@
 
 void GSGamePlay::Init()
 {
-	m_mapManager = std::make_shared<MapManager>("CatchFlies.txt");
+	m_controller = std::make_shared<GameController>("CatchFlies.txt");
 	
 	
 }
 
 void GSGamePlay::Draw()
 {
-	m_mapManager->Render();
+	m_controller->Render();
 }
 
 void GSGamePlay::Update(float i_delta)
 {
-	m_mapManager->UpdateScene(i_delta);
+	m_controller->UpdateScene(i_delta);
 }
 
 void GSGamePlay::HandleKeyEvents(int key, bool bIsPressed)
 {
 	if (bIsPressed)
 	{
-		m_mapManager->Keyboard_Down(key);
+		m_controller->Keyboard_Down(key);
 	}
 	else
 	{
-		m_mapManager->Keyboard_Up(key);
+		m_controller->Keyboard_Up(key);
 	}
 }
 void GSGamePlay::HandleTouchEvents(int x, int y, bool bIsPressed)

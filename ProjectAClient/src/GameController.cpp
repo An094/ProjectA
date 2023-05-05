@@ -1,7 +1,12 @@
-#include "MapManager.h"
+#include "GameController.h"
 
-MapManager::MapManager(const std::string& i_fileName)
+GameController::GameController(const std::string& i_fileName)
 {
+	//Try to connect to localhost
+	if (!Connect("127.0.0.1", 60000))
+	{
+		return;
+	}
 	const std::string mapPath = "../Data/Maps/" + i_fileName;
 	std::fstream input(mapPath);
 	if (input.fail())
@@ -87,22 +92,6 @@ MapManager::MapManager(const std::string& i_fileName)
 		m_clouds.push_back(std::move(cloud));
 	}
 
-	//Border
-
-	//std::shared_ptr<Sprite2D> Leftborder = std::make_shared<Sprite2D>("CatchFlies/Border.png");
-	//Leftborder->SetPosition(40, 192);
-	//Leftborder->SetSize(70, 384);
-
-	//std::shared_ptr<Sprite2D> Rightborder = std::make_shared<Sprite2D>("CatchFlies/Border.png");
-	//Rightborder->SetPosition(840, 192);
-	//Rightborder->SetSize(70, 384);
-
-	//std::shared_ptr<Sprite2D> Downborder = std::make_shared<Sprite2D>("CatchFlies/Border1.png");
-	//Downborder->SetPosition(440, 424);
-	//Downborder->SetSize(880, 70);
-	//m_borders.push_back(std::move(Leftborder));
-	//m_borders.push_back(std::move(Rightborder));
-	//m_borders.push_back(std::move(Downborder));
 
 	Frog::InitializeSprites();
 	m_frogs.reserve(2);
@@ -115,8 +104,72 @@ MapManager::MapManager(const std::string& i_fileName)
 }
 
 
-void MapManager::UpdateScene(float i_delaTime)
+void GameController::UpdateScene(float i_delaTime)
 {
+	//Check for incoming network messages
+	if (IsConnected())
+	{
+		while (!Incoming().empty())
+		{
+			auto msg = Incoming().pop_front().msg;
+
+			switch (msg.header.id)
+			{
+			case(GameMsg::Client_Accepted):
+			{
+				std::cout << "Server accepted client - you're in!\n";
+				olc::net::message<GameMsg> msg;
+				msg.header.id = GameMsg::Client_RegisterWithServer;
+				descPlayer.vPos = { 3.0f, 3.0f };
+				msg << descPlayer;
+				Send(msg);
+				break;
+			}
+
+			case(GameMsg::Client_AssignID):
+			{
+				// Server is assigning us OUR id
+				msg >> nPlayerID;
+				std::cout << "Assigned Client ID = " << nPlayerID << "\n";
+				break;
+			}
+
+			case(GameMsg::Game_AddPlayer):
+			{
+				sPlayerDescription desc;
+				msg >> desc;
+				mapObjects.insert_or_assign(desc.nUniqueID, desc);
+
+				if (desc.nUniqueID == nPlayerID)
+				{
+					// Now we exist in game world
+					bWaitingForConnection = false;
+				}
+				break;
+			}
+
+			case(GameMsg::Game_RemovePlayer):
+			{
+				uint32_t nRemovalID = 0;
+				msg >> nRemovalID;
+				mapObjects.erase(nRemovalID);
+				break;
+			}
+
+			case(GameMsg::Game_UpdatePlayer):
+			{
+				sPlayerDescription desc;
+				msg >> desc;
+				mapObjects.insert_or_assign(desc.nUniqueID, desc);
+				break;
+			}
+
+
+			}
+		}
+	}
+
+
 	timerCount++;
 	if (timerCount == 90)
 	{
@@ -155,9 +208,15 @@ void MapManager::UpdateScene(float i_delaTime)
 	{
 		it->Update(i_delaTime);
 	}
+
+	// Send player description
+	olc::net::message<GameMsg> msg;
+	msg.header.id = GameMsg::Game_UpdatePlayer;
+	msg << mapObjects[nPlayerID];
+	Send(msg);
 }
 
-void MapManager::Render()
+void GameController::Render()
 {
 	m_background->Draw();
 	m_ground->Draw();
@@ -183,7 +242,7 @@ void MapManager::Render()
 	}
 }
 
-void MapManager::Keyboard_Down(int i_key)
+void GameController::Keyboard_Down(int i_key)
 {
 	switch (i_key)
 	{
@@ -202,7 +261,7 @@ void MapManager::Keyboard_Down(int i_key)
 	}
 }
 
-void MapManager::Keyboard_Up(int i_key)
+void GameController::Keyboard_Up(int i_key)
 {
 	switch (i_key)
 	{

@@ -185,7 +185,8 @@ project "ProjectAClient"
 		"AF/include/freetype",
 		"AF/include/Soloud",
 		"AF/include/spdlog/include",
-		"ProjectAClient/src"
+		"ProjectAClient/src",
+		"ProjectAServer/src"
 	}
 
 	links

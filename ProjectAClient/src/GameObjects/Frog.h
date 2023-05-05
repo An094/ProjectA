@@ -3,7 +3,7 @@
 #include "GameConfig.h"
 
 using namespace std::placeholders;
-class MapManager;
+class GameController;
 enum class FaceTo
 {
 	Left = 0,
@@ -13,7 +13,7 @@ enum class FaceTo
 class Frog
 {
 public:
-	Frog(int, /*std::shared_ptr<MapManager>*/ MapManager*);
+	Frog(int, /*std::shared_ptr<MapManager>*/ GameController*);
 	~Frog() = default;
 
 	void UpdateImage();
@@ -46,7 +46,7 @@ private:
 	Check_Angle Check_Angle_Pointer[2][2] = { {&Frog::Check_Angle_Left_Decrease, &Frog::Check_Angle_Left_Increase}, {&Frog::Check_Angle_Right_Decrease, &Frog::Check_Angle_Right_Increase} };
 private:
 	//std::shared_ptr<MapManager> m_mapManager;
-	MapManager* m_mapManager;
+	GameController* m_controller;
 	std::shared_ptr<Sprite2D> m_sprite;
 	static inline float Map_offset[2]{ -1.0f, 1.0f };
 	static inline float Map_Base_Angle[2]{ 160.0f, 20.0f };

@@ -1,5 +1,5 @@
 #pragma once
-#include "MapManager.h"
+#include "GameController.h"
 
 using namespace EngineCore;
 
@@ -22,7 +22,7 @@ public:
 	void HandleTouchEvents(int x, int y, bool bIsPressed) override;
 
 private:
-	std::shared_ptr<MapManager> m_mapManager;
+	std::shared_ptr<GameController> m_controller;
 	std::shared_ptr<Button> m_leftButton;
 	std::shared_ptr<Button> m_rightButton;
 };

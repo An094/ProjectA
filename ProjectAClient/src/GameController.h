@@ -5,6 +5,8 @@
 #include "GameObjects/Platformer.h"
 #include "GameObjects/Frog.h"
 #include "GameObjects/Fly.h"
+#include "NetCommon.h"
+#include <unordered_map>
 
 struct Point
 {
@@ -12,10 +14,10 @@ struct Point
 	float y;
 };
 
-class MapManager
+class GameController : olc::net::client_interface<GameMsg>
 {
 public:
-	MapManager(const std::string&);
+	GameController(const std::string&);
 
 	void UpdateScene(float);
 	void Render();
@@ -44,4 +46,12 @@ private:
 	std::vector<std::shared_ptr<Frog>> m_frogs;
 	std::vector<std::shared_ptr<Fly>> m_flies;
 	uint32_t timerCount{};
+
+	///networking
+	std::unordered_map<uint32_t, sPlayerDescription> mapObjects;
+	uint32_t nPlayerID = 0;
+	sPlayerDescription descPlayer;
+
+	bool bWaitingForConnection = true;
+
 };
