@@ -53,5 +53,5 @@ bool Fly::IsCaught(float i_x, float i_y)
 
 void Fly::UpdatePosition()
 {
-	m_sprite->SetPosition(x, y);
+	m_sprite->SetPosition(x, y, YAxisPlace::Bottom);
 }

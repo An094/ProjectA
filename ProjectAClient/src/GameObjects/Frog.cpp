@@ -31,6 +31,7 @@ Frog::Frog(int i_player, /*std::shared_ptr<MapManager> i_mapManager*/MapManager*
 	isJumping = false;
 	isJumpPressed = false;
 	vx = vy = 0.0f;
+	Score = 0;
 	UpdateImage();
 	UpdatePosition();
 }
@@ -148,7 +149,7 @@ void Frog::Update(float i_deltaTime)
 			UpdateImage();
 		}
 
-		std::vector<std::shared_ptr<Fly>> flies = m_mapManager->GetFlies();
+		std::vector<std::shared_ptr<Fly>>& flies = m_mapManager->GetFlies();
 		auto it  = flies.begin();
 		while (it != flies.end()) {
 			if (it->get()->IsCaught(x, y)) {
