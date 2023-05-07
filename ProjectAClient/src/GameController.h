@@ -43,14 +43,15 @@ private:
 	std::vector<std::shared_ptr<Sprite2D>> m_borders;
 	std::vector<std::shared_ptr<Cloud>> m_clouds;
 	std::vector<std::shared_ptr<Platformer>> m_platformers;
-	std::vector<std::shared_ptr<Frog>> m_frogs;
+	std::unordered_map<uint32_t, std::shared_ptr<Frog>> m_frogs;
 	std::vector<std::shared_ptr<Fly>> m_flies;
 	uint32_t timerCount{};
 
 	///networking
-	std::unordered_map<uint32_t, sPlayerDescription> mapObjects;
+	std::unordered_map<uint32_t, sFrogDescription> mapObjects;
+	std::unordered_map<uint32_t, Frog> mapObjects1;
 	uint32_t nPlayerID = 0;
-	sPlayerDescription descPlayer;
+	sFrogDescription descPlayer;
 
 	bool bWaitingForConnection = true;
 

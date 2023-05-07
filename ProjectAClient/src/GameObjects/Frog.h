@@ -1,6 +1,7 @@
 #pragma once
 #include "GameEngine.h"
 #include "GameConfig.h"
+#include "NetCommon.h"
 
 using namespace std::placeholders;
 class GameController;
@@ -13,9 +14,8 @@ enum class FaceTo
 class Frog
 {
 public:
-	Frog(int, /*std::shared_ptr<MapManager>*/ GameController*);
+	Frog(const sFrogDescription&, /*std::shared_ptr<MapManager>*/ GameController*);
 	~Frog() = default;
-
 	void UpdateImage();
 	void UpdatePosition();
 	static inline std::shared_ptr<Sprite2D> m_sprites[2][2][2];
@@ -23,10 +23,9 @@ public:
 
 	void Draw();
 	void Update(float);
+	void UpdateDescription(const sFrogDescription&);
 	void Key_Down();
 	void Key_Up();
-	void Keyboard_Down(int key);
-	void Keyboard_Up(int key);
 public:
 	void Jump();
 	void Prepare_Start();
@@ -44,6 +43,8 @@ private:
 	bool Check_Angle_Right_Increase(float i_angle) { return i_angle >= 70.0f; }
 	typedef bool (Frog::* Check_Angle)(float);
 	Check_Angle Check_Angle_Pointer[2][2] = { {&Frog::Check_Angle_Left_Decrease, &Frog::Check_Angle_Left_Increase}, {&Frog::Check_Angle_Right_Decrease, &Frog::Check_Angle_Right_Increase} };
+public:
+	sFrogDescription m_desc;
 private:
 	//std::shared_ptr<MapManager> m_mapManager;
 	GameController* m_controller;
@@ -51,19 +52,17 @@ private:
 	static inline float Map_offset[2]{ -1.0f, 1.0f };
 	static inline float Map_Base_Angle[2]{ 160.0f, 20.0f };
 
-	float x, y, vx, vy;
-	int Player;
-	
-	//FaceTo dir;
-	int dir;
-	int Anim;
-	int Prepare_stt;
-	bool isJumping;
-	bool isJumpPressed;
-	float Angle;
-	int Angle_Drt;
-	int Score;
-
+	//float x, y, vx, vy;
+	//int Player;
+	//
+	//int dir;
+	//int Anim;
+	//int Prepare_stt;
+	//bool isJumping;
+	//bool isJumpPressed;
+	//float Angle;
+	//int Angle_Drt;
+	//int Score;
 
 	class Line
 	{
@@ -75,11 +74,11 @@ private:
 			m_y = i_y;
 			m_angle = i_Angle;
 			char textureFile[30];
-			sprintf(textureFile, "CatchFlies/Line_%d.png", i_player);
+			sprintf(textureFile, "CatchFlies/circle_%d.png", i_player);
 			m_sprite = std::make_shared<Sprite2D>(textureFile);
 			m_sprite->Rotate(i_Angle);
 			m_sprite->SetPosition(i_x, i_y, YAxisPlace::Bottom);
-			m_sprite->SetSize(24, 12);
+			m_sprite->SetSize(12, 6);
 		}
 
 		void Draw()

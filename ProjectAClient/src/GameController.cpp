@@ -94,19 +94,19 @@ GameController::GameController(const std::string& i_fileName)
 
 
 	Frog::InitializeSprites();
-	m_frogs.reserve(2);
-	for (int i = 0; i < 2; i++)
-	{
-		auto frog = std::make_shared<Frog>(i,this);
-		m_frogs.push_back(std::move(frog));
-	}
-	
+	//m_frogs.reserve(2);
+	//for (int i = 0; i < 2; i++)
+	//{
+	//	auto frog = std::make_shared<Frog>(i,this);
+	//	m_frogs.push_back(std::move(frog));
+	//}
+	//
 }
 
 
 void GameController::UpdateScene(float i_delaTime)
 {
-	//Check for incoming network messages
+	////Check for incoming network messages
 	if (IsConnected())
 	{
 		while (!Incoming().empty())
@@ -120,7 +120,6 @@ void GameController::UpdateScene(float i_delaTime)
 				std::cout << "Server accepted client - you're in!\n";
 				olc::net::message<GameMsg> msg;
 				msg.header.id = GameMsg::Client_RegisterWithServer;
-				descPlayer.vPos = { 3.0f, 3.0f };
 				msg << descPlayer;
 				Send(msg);
 				break;
@@ -136,9 +135,12 @@ void GameController::UpdateScene(float i_delaTime)
 
 			case(GameMsg::Game_AddPlayer):
 			{
-				sPlayerDescription desc;
+				sFrogDescription desc;
 				msg >> desc;
 				mapObjects.insert_or_assign(desc.nUniqueID, desc);
+				//an.ngothai
+				auto frog = std::make_shared<Frog>(desc, this);
+				m_frogs.insert_or_assign(desc.nUniqueID, std::move(frog));
 
 				if (desc.nUniqueID == nPlayerID)
 				{
@@ -158,9 +160,18 @@ void GameController::UpdateScene(float i_delaTime)
 
 			case(GameMsg::Game_UpdatePlayer):
 			{
-				sPlayerDescription desc;
+				sFrogDescription desc;
 				msg >> desc;
 				mapObjects.insert_or_assign(desc.nUniqueID, desc);
+				if (m_frogs.find(desc.nUniqueID) != m_frogs.end())
+				{
+					m_frogs[desc.nUniqueID]->UpdateDescription(desc);
+				}
+				else
+				{
+					auto frog = std::make_shared<Frog>(desc, this);
+					m_frogs.insert_or_assign(desc.nUniqueID, std::move(frog));
+				}
 				break;
 			}
 
@@ -169,6 +180,11 @@ void GameController::UpdateScene(float i_delaTime)
 		}
 	}
 
+	if (bWaitingForConnection)
+	{
+		std::cout << "Waiting to Connect" << std::endl;
+		return;
+	}
 
 	timerCount++;
 	if (timerCount == 90)
@@ -202,13 +218,16 @@ void GameController::UpdateScene(float i_delaTime)
 	}
 	for (auto it : m_frogs)
 	{
-		it->Update(i_delaTime);
+		it.second->Update(i_delaTime);
 	}
 	for (auto it : m_flies)
 	{
 		it->Update(i_delaTime);
 	}
 
+
+	mapObjects[nPlayerID] = m_frogs[nPlayerID]->m_desc;
+	
 	// Send player description
 	olc::net::message<GameMsg> msg;
 	msg.header.id = GameMsg::Game_UpdatePlayer;
@@ -234,7 +253,7 @@ void GameController::Render()
 	}
 	for (auto it : m_frogs)
 	{
-		it->Draw();
+		it.second->Draw();
 	}
 	for (auto it : m_flies)
 	{
@@ -248,12 +267,25 @@ void GameController::Keyboard_Down(int i_key)
 	{
 	case GLFW_KEY_SPACE:
 	{
-		m_frogs[0]->Key_Down();
+		//m_frogs[0]->Key_Down();
+		for (auto it : m_frogs)
+		{
+			if (it.second->m_desc.nIndex == 0)
+			{
+				it.second->Key_Down();
+			}
+		}
 		break;
 	}
 	case GLFW_KEY_ENTER:
 	{
-		m_frogs[1]->Key_Down();
+		for (auto it : m_frogs)
+		{
+			if (it.second->m_desc.nIndex == 1)
+			{
+				it.second->Key_Down();
+			}
+		}
 		break;
 	}
 	default:
@@ -267,12 +299,24 @@ void GameController::Keyboard_Up(int i_key)
 	{
 	case GLFW_KEY_SPACE:
 	{
-		m_frogs[0]->Key_Up();
+		for (auto it : m_frogs)
+		{
+			if (it.second->m_desc.nIndex == 0)
+			{
+				it.second->Key_Up();
+			}
+		}
 		break;
 	}
 	case GLFW_KEY_ENTER:
 	{
-		m_frogs[1]->Key_Up();
+		for (auto it : m_frogs)
+		{
+			if (it.second->m_desc.nIndex == 1)
+			{
+				it.second->Key_Up();
+			}
+		}
 		break;
 	}
 	default:

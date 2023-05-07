@@ -18,32 +18,37 @@ void Frog::InitializeSprites()
 	}
 }
 
-Frog::Frog(int i_player, GameController* i_controller)
+Frog::Frog(const sFrogDescription& i_desc, GameController* i_controller)
 	:m_controller(i_controller)
 {
-	Player = i_player;
-	dir = 1 - i_player;
-	Anim = 0;// 0 - sit, 1 - jump
-	float Offset = 11.0f * CELL_SIZE * (Player == 0 ? -1 : 1);
-	x = WIDTH / 2 + Offset;
-	y = 2 * CELL_SIZE;
-	Prepare_stt = 0;
-	isJumping = false;
-	isJumpPressed = false;
-	vx = vy = 0.0f;
-	Score = 0;
+	//Player = i_player;
+	////dir = 1 - i_player;
+	//dir = 0;
+	//Anim = 0;// 0 - sit, 1 - jump
+	//float Offset = 11.0f * CELL_SIZE * (-1);//(Player == 0 ? -1 : 1);
+	//x = WIDTH / 2 + Offset;
+	//y = 2 * CELL_SIZE;
+	//Prepare_stt = 0;
+	//isJumping = false;
+	//isJumpPressed = false;
+	//vx = vy = 0.0f;
+	//Score = 0;
+
+	m_desc = i_desc;
+
 	UpdateImage();
 	UpdatePosition();
 }
 
+
 void Frog::UpdateImage()
 {
-	m_sprite = m_sprites[Player][static_cast<int>(dir)][Anim];
+	m_sprite = m_sprites[m_desc.nIndex][static_cast<int>(m_desc.nDrt)][m_desc.nAnim];
 }
 
 void Frog::UpdatePosition()
 {
-	m_sprite->SetPosition(x + 24, y + 24, YAxisPlace::Bottom);
+	m_sprite->SetPosition(m_desc.nX + CELL_SIZE, m_desc.nY + CELL_SIZE, YAxisPlace::Bottom);
 }
 
 void Frog::Draw()
@@ -61,9 +66,9 @@ void Frog::Draw()
 void Frog::Update(float i_deltaTime)
 {
 	m_lines.clear();
-	if (!isJumping)
+	if (!m_desc.nIsJumping)
 	{
-		if (isJumpPressed)
+		if (m_desc.nIsJumpPressed)
 		{
 			Prepare_Start();
 		}
@@ -72,39 +77,39 @@ void Frog::Update(float i_deltaTime)
 			Prepare_End();
 		}
 	}
-	if (!isJumping)
+	if (!m_desc.nIsJumping)
 	{
-		if (Prepare_stt > 0)
+		if (m_desc.nPrepare_stt > 0)
 		{
-			if (Prepare_stt == 2)
+			if (m_desc.nPrepare_stt == 2)
 			{
-				Prepare_stt = 0;
+				m_desc.nPrepare_stt = 0;
 				Jump();
 			}
 			else
 			{
-				Angle += Map_offset[Angle_Drt];
-				Check_Angle func = Check_Angle_Pointer[dir][Angle_Drt];
+				m_desc.nAngle += Map_offset[m_desc.nAngle_Drt];
+				Check_Angle func = Check_Angle_Pointer[m_desc.nDrt][m_desc.nDrt];
 
-				if ((this->*func)(Angle))
+				if ((this->*func)(m_desc.nAngle))
 				{
-					Angle_Drt = 1 - Angle_Drt;
+					m_desc.nAngle_Drt = 1 - m_desc.nAngle_Drt;
 				}
 
-				float Angle2 = Angle / RAD;
-				float x2 = x, y2 = y + 4.0f, vx2, vy2;
+				float Angle2 = m_desc.nAngle / RAD;
+				float x2 = m_desc.nX, y2 = m_desc.nY + 4.0f, vx2, vy2;
 				vx2 =
-					cos(Angle2) * 4 + (dir == 0 ? Angle2 - PI : Angle2) * 9;
+					cos(Angle2) * 4 + (m_desc.nDrt == 0 ? Angle2 - PI : Angle2) * 9;
 				vy2 = sin(Angle2) * 21;
-				vx = vx2;
-				vy = vy2;
+				m_desc.nVx = vx2;
+				m_desc.nVy = vy2;
 
 				for (int i = 0; i < 18; i++) {
 					x2 += vx2;
 					y2 += vy2;
 					if (i % 3 == 2) {
 						Angle2 = atan2(vy2, vx2) * RAD;
-						m_lines.push_back(Line(Player, x2, y2, Angle2));
+						m_lines.push_back(Line(m_desc.nIndex, x2, y2, Angle2));
 					}
 					vy2 += GRAVITY;
 				}
@@ -113,48 +118,48 @@ void Frog::Update(float i_deltaTime)
 	}
 	else
 	{
-		float y_old = y;
-		x += vx;
-		y += vy;
-		vy += GRAVITY;
-		if (vy < -24.0f)
+		float y_old = m_desc.nY;
+		m_desc.nX += m_desc.nVx;
+		m_desc.nY += m_desc.nVy;
+		m_desc.nVy += GRAVITY;
+		if (m_desc.nVy < -24.0f)
 		{
-			vy = -24.0f;
+			m_desc.nVy = -24.0f;
 		}
-		if (vy <= 0.0f)
+		if (m_desc.nVy <= 0.0f)
 		{
-			int col1 = (x - 9.0f) / CELL_SIZE;
-			int col2 = (x + 9.0f) / CELL_SIZE;
+			int col1 = (m_desc.nX - 9.0f) / CELL_SIZE;
+			int col2 = (m_desc.nX + 9.0f) / CELL_SIZE;
 			int row_old = (y_old) / CELL_SIZE;
-			int row = (y) / CELL_SIZE;
+			int row = m_desc.nY / CELL_SIZE;
 			if (!m_controller->m_tileMatrix[row_old][col1]
 				&& !m_controller->m_tileMatrix[row_old][col2]
 				&& (m_controller->m_tileMatrix[row][col1] || m_controller->m_tileMatrix[row][col2]))
 			{
-				isJumping = false;
-				y = (row + 1) * CELL_SIZE;
-				vx = 0.0f;
-				vy = 0.0f;
-				Anim = 0;
+				m_desc.nIsJumping = false;
+				m_desc.nY = (row + 1) * CELL_SIZE;
+				m_desc.nVx = 0.0f;
+				m_desc.nVy = 0.0f;
+				m_desc.nAnim = 0;
 				UpdateImage();
 			}
 		}
 
-		Check_Boundary func = Check_Boundary_Pointer[dir];
+		Check_Boundary func = Check_Boundary_Pointer[m_desc.nDrt];
 
-		if ((this->*func)(x))
+		if ((this->*func)(m_desc.nX))
 		{
-			dir = 1 - dir;
-			vx = -vx;
+			m_desc.nDrt = 1 - m_desc.nDrt;
+			m_desc.nVx = -m_desc.nVx;
 			UpdateImage();
 		}
 
 		std::vector<std::shared_ptr<Fly>>& flies = m_controller->GetFlies();
 		auto it  = flies.begin();
 		while (it != flies.end()) {
-			if (it->get()->IsCaught(x, y)) {
+			if (it->get()->IsCaught(m_desc.nX, m_desc.nY)) {
 				it = flies.erase(it);
-				Score++;
+				m_desc.nScore++;
 
 			}
 			else
@@ -170,73 +175,46 @@ void Frog::Update(float i_deltaTime)
 
 void Frog::Jump()
 {
-	if (!isJumping)
+	if (!m_desc.nIsJumping)
 	{
-		isJumping = true;
-		Anim = 1;
+		m_desc.nIsJumping = true;
+		m_desc.nAnim = 1;
 		UpdateImage();
 	}
 }
 
-void Frog::Keyboard_Down(int key)
-{
-	switch (key)
-	{
-	case GLFW_KEY_BACKSPACE:
-	{
-		if (!Player)
-		{
-
-		}
-		break;
-	}
-	case GLFW_KEY_KP_ENTER:
-	{
-		if (Player)
-		{
-
-		}
-		break;
-	}
-	default:
-		break;
-	}
-}
-
-void Frog::Keyboard_Up(int key)
-{
-
-}
 
 void Frog::Key_Down()
 {
-	//isJumping = true;
-	isJumpPressed = true;
+	m_desc.nIsJumpPressed = true;
 }
 
 void Frog::Key_Up()
 {
-	//isJumping = false;
-	isJumpPressed = false;
-	//vx = 10.0f;
-	//vy = 15.0f;
+	m_desc.nIsJumpPressed = false;
+
 	Jump();
 }
 
 void Frog::Prepare_Start()
 {
-	if (Prepare_stt == 0)
+	if (m_desc.nPrepare_stt == 0)
 	{
-		Prepare_stt = 1;
-		Angle_Drt = dir;
-		Angle = Map_Base_Angle[dir];
+		m_desc.nPrepare_stt = 1;
+		m_desc.nAngle_Drt = m_desc.nDrt;
+		m_desc.nAngle = Map_Base_Angle[m_desc.nDrt];
 	}
 }
 
 void Frog::Prepare_End()
 {
-	if (Prepare_stt == 1)
+	if (m_desc.nPrepare_stt == 1)
 	{
-		Prepare_stt = 2;
+		m_desc.nPrepare_stt = 2;
 	}
+}
+
+void Frog::UpdateDescription(const sFrogDescription& i_desc)
+{
+	m_desc = i_desc;
 }

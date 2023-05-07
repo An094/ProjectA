@@ -8,6 +8,7 @@ workspace "ProjectA"
 		"Debug",
 		"Release"
 	}
+
 	
 project "AF"
 	location "AF"
@@ -193,7 +194,9 @@ project "ProjectAClient"
 	{
 		"AF"
 	}	
-
+	
+	postbuildcommands { "xcopy /i /y D:\\Objective\\bin\\%{cfg.buildcfg}-x64\\%{prj.name} D:\\Objective\\release" }
+	
 	filter "system:windows"
 		staticruntime "Off"
 		systemversion "latest"
@@ -209,7 +212,7 @@ project "ProjectAClient"
 	filter "architecture:x64"
 		targetdir ("bin/%{cfg.buildcfg}-x64/%{prj.name}")
 		objdir ("bin-int/%{cfg.buildcfg}-x64/%{prj.name}")
-
+	
 project "ProjectAServer"
 	location "ProjectAServer"
 	kind "ConsoleApp"
@@ -239,6 +242,9 @@ project "ProjectAServer"
 		"AF"
 	}	
 
+	
+	postbuildcommands { "xcopy /i /y D:\\Objective\\bin\\%{cfg.buildcfg}-x64\\%{prj.name} D:\\Objective\\release" }
+	
 	filter "system:windows"
 		staticruntime "Off"
 		systemversion "latest"
