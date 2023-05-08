@@ -11,9 +11,11 @@ public:
 	{
 	}
 
-	std::unordered_map<uint32_t, sFrogDescription> m_mapPlayerRoster;
+	std::unordered_map<uint32_t, sFrogDescription> m_frogRoster;
+	//std::unordered_map<uint32_t, sFlyDescription> m_flyRoster;//first is channel Id;
+	std::vector<sFlyDescription> m_flyRoster;//first is channel Id;
 	std::vector<uint32_t> m_vGarbageIDs;
-
+	std::vector<std::pair<float, float>> spawnPoints = { {100.0f,300.0f}, {620.0f, 300.0f}, {360.0f, 280.0f}, {360.0f, 130.0f}, {100.0f, 120.0f}, {620.0f, 120.0f} };
 protected:
 	bool OnClientConnect(std::shared_ptr<olc::net::connection<GameMsg>> client) override
 	{
@@ -34,15 +36,15 @@ protected:
 	{
 		if (client)
 		{
-			if (m_mapPlayerRoster.find(client->GetID()) == m_mapPlayerRoster.end())
+			if (m_frogRoster.find(client->GetID()) == m_frogRoster.end())
 			{
 				// client never added to roster, so just let it disappear
 			}
 			else
 			{
-				auto& pd = m_mapPlayerRoster[client->GetID()];
+				auto& pd = m_frogRoster[client->GetID()];
 				std::cout << "[UNGRACEFUL REMOVAL]:" + std::to_string(pd.nUniqueID) + "\n";
-				m_mapPlayerRoster.erase(client->GetID());
+				m_frogRoster.erase(client->GetID());
 				m_vGarbageIDs.push_back(client->GetID());
 			}
 		}
@@ -74,12 +76,12 @@ protected:
 			msg >> desc;
 			desc.nUniqueID = client->GetID();
 			//an.ngothai
-			desc.nIndex = m_mapPlayerRoster.size();
+			desc.nIndex = desc.nUniqueID % 2 == 0 ? 0 : 1;
 			float Offset = 11.0f * CELL_SIZE * (desc.nIndex == 0 ? -1 : 1);
 			desc.nX = WIDTH / 2 + Offset;
 			desc.nY = 2 * CELL_SIZE;
 			desc.nDrt = 1 - desc.nIndex;
-			m_mapPlayerRoster.insert_or_assign(desc.nUniqueID, desc);
+			m_frogRoster.insert_or_assign(desc.nUniqueID, desc);
 
 			olc::net::message<GameMsg> msgSendID;
 			msgSendID.header.id = GameMsg::Client_AssignID;
@@ -91,13 +93,14 @@ protected:
 			msgAddPlayer << desc;
 			MessageAllClients(msgAddPlayer);
 
-			for (const auto& player : m_mapPlayerRoster)
+			for (const auto& player : m_frogRoster)
 			{
 				olc::net::message<GameMsg> msgAddOtherPlayers;
 				msgAddOtherPlayers.header.id = GameMsg::Game_AddPlayer;
 				msgAddOtherPlayers << player.second;
 				MessageClient(client, msgAddOtherPlayers);
 			}
+			
 
 			break;
 		}
@@ -114,10 +117,82 @@ protected:
 			break;
 		}
 
+		case GameMsg::Client_UpdateFly:
+		{
+			MessageAllClients(msg, client);
+			break;
+		}
+
+		case GameMsg::Client_CatchFly:
+		{
+
+		}
+
 		}
 
 	}
+public:
+	void Update(size_t nMaxMessages = -1, bool bWait = false) override
+	{
+		//if (bWait) m_qMessagesIn.wait();
 
+		// Process as many messages as you can up to the value
+		// specified
+		size_t nMessageCount = 0;
+		while (nMessageCount < nMaxMessages && !m_qMessagesIn.empty())
+		{
+			// Grab the front message
+			auto msg = m_qMessagesIn.pop_front();
+
+			// Pass to message handler
+			OnMessage(msg.remote, msg.msg);
+
+			nMessageCount++;
+		}
+		//Spawn flies
+		if (m_flyRoster.size() < MAX_FLIES && m_frogRoster.size() == 2)
+		{
+			bool check;
+			int Region;
+			do
+			{
+				check = false;
+				Region = rand() % 6;
+				for (auto fly : m_flyRoster)
+				{
+					if (fly.nRegion == Region)
+					{
+						check = true;
+						break;
+					}
+				}
+			} while (check);
+			sFlyDescription desc;
+			
+			olc::net::message<GameMsg> msgSpawnFly;
+			msgSpawnFly.header.id = GameMsg::Server_SpawnFly;
+			
+			
+			desc.isAlive = true;
+			desc.nRegion = Region;
+			desc.nX = spawnPoints[Region].first;
+			desc.nY = spawnPoints[Region].second;
+			msgSpawnFly << desc;
+			
+			MessageAllClients(msgSpawnFly);
+			
+			m_flyRoster.push_back(std::move(desc));
+
+		}
+
+		/*for (const auto& fly : m_flyRoster)
+		{
+			olc::net::message<GameMsg> msgUpdateFly;
+			msgUpdateFly.header.id = GameMsg::Server_UpdateFly;
+			msgUpdateFly << fly;
+			MessageAllClients(msgUpdateFly);
+		}*/
+	}
 };
 
 

@@ -46,23 +46,10 @@ private:
 public:
 	sFrogDescription m_desc;
 private:
-	//std::shared_ptr<MapManager> m_mapManager;
 	GameController* m_controller;
 	std::shared_ptr<Sprite2D> m_sprite;
 	static inline float Map_offset[2]{ -1.0f, 1.0f };
 	static inline float Map_Base_Angle[2]{ 160.0f, 20.0f };
-
-	//float x, y, vx, vy;
-	//int Player;
-	//
-	//int dir;
-	//int Anim;
-	//int Prepare_stt;
-	//bool isJumping;
-	//bool isJumpPressed;
-	//float Angle;
-	//int Angle_Drt;
-	//int Score;
 
 	class Line
 	{

@@ -1,5 +1,5 @@
 #include "GameController.h"
-
+#include <algorithm>
 GameController::GameController(const std::string& i_fileName)
 {
 	//Try to connect to localhost
@@ -137,8 +137,8 @@ void GameController::UpdateScene(float i_delaTime)
 			{
 				sFrogDescription desc;
 				msg >> desc;
-				mapObjects.insert_or_assign(desc.nUniqueID, desc);
-				//an.ngothai
+				m_frogsDesciption.insert_or_assign(desc.nUniqueID, desc);
+
 				auto frog = std::make_shared<Frog>(desc, this);
 				m_frogs.insert_or_assign(desc.nUniqueID, std::move(frog));
 
@@ -154,7 +154,7 @@ void GameController::UpdateScene(float i_delaTime)
 			{
 				uint32_t nRemovalID = 0;
 				msg >> nRemovalID;
-				mapObjects.erase(nRemovalID);
+				m_frogsDesciption.erase(nRemovalID);
 				break;
 			}
 
@@ -162,7 +162,7 @@ void GameController::UpdateScene(float i_delaTime)
 			{
 				sFrogDescription desc;
 				msg >> desc;
-				mapObjects.insert_or_assign(desc.nUniqueID, desc);
+				m_frogsDesciption.insert_or_assign(desc.nUniqueID, desc);
 				if (m_frogs.find(desc.nUniqueID) != m_frogs.end())
 				{
 					m_frogs[desc.nUniqueID]->UpdateDescription(desc);
@@ -171,6 +171,39 @@ void GameController::UpdateScene(float i_delaTime)
 				{
 					auto frog = std::make_shared<Frog>(desc, this);
 					m_frogs.insert_or_assign(desc.nUniqueID, std::move(frog));
+				}
+				break;
+			}
+
+			case(GameMsg::Server_SpawnFly):
+			{
+				sFlyDescription desc;
+				msg >> desc;
+				m_fliesDescription.push_back(desc);
+				auto fly = std::make_shared<Fly>(desc);
+				m_flies.push_back(std::move(fly));
+
+				break;
+			}
+
+			case (GameMsg::Client_UpdateFly):
+			{
+				sFlyDescription desc;
+				msg >> desc;
+				for (auto& it : m_fliesDescription)
+				{
+					if (it.nRegion == desc.nRegion)
+					{
+						it = desc;
+					}
+				}
+				
+				for (auto& it : m_flies)
+				{
+					if (it->m_desc.nRegion == desc.nRegion)
+					{
+						it->UpdateDescription(desc);
+					}
 				}
 				break;
 			}
@@ -186,30 +219,30 @@ void GameController::UpdateScene(float i_delaTime)
 		return;
 	}
 
-	timerCount++;
-	if (timerCount == 90)
-	{
-		timerCount = 0;
-		if (m_flies.size() < MAX_FLIES)
-		{
-			bool check;
-			int Region;
-			do
-			{
-				check = false;
-				Region = rand() % 6;
-				for (auto fly : m_flies)
-				{
-					if (fly->Region == Region)
-					{
-						check = true;
-						break;
-					}
-				}
-			} while (check);
-			m_flies.push_back(std::make_shared<Fly>(spawnPoints[Region].x, spawnPoints[Region].y, Region));
-		}
-	}
+	//timerCount++;
+	//if (timerCount == 90)
+	//{
+	//	timerCount = 0;
+	//	if (m_flies.size() < MAX_FLIES)
+	//	{
+	//		bool check;
+	//		int Region;
+	//		do
+	//		{
+	//			check = false;
+	//			Region = rand() % 6;
+	//			for (auto fly : m_flies)
+	//			{
+	//				//if (fly->Region == Region)
+	//				{
+	//					check = true;
+	//					break;
+	//				}
+	//			}
+	//		} while (check);
+	//		m_flies.push_back(std::make_shared<Fly>(spawnPoints[Region].x, spawnPoints[Region].y, Region));
+	//	}
+	//}
 
 
 	for (auto it : m_clouds)
@@ -226,12 +259,28 @@ void GameController::UpdateScene(float i_delaTime)
 	}
 
 
-	mapObjects[nPlayerID] = m_frogs[nPlayerID]->m_desc;
-	
+	m_frogsDesciption[nPlayerID] = m_frogs[nPlayerID]->m_desc;
+	for (auto& it : m_fliesDescription)
+	{
+		for (auto& itr : m_flies)
+		{
+			if (it.nRegion == itr->m_desc.nRegion)
+			{
+				it = itr->m_desc;
+			}
+		}
+		olc::net::message<GameMsg> msg;
+		msg.header.id = GameMsg::Client_UpdateFly;
+		msg << it;
+		Send(msg);
+
+	}
+
+
 	// Send player description
 	olc::net::message<GameMsg> msg;
 	msg.header.id = GameMsg::Game_UpdatePlayer;
-	msg << mapObjects[nPlayerID];
+	msg << m_frogsDesciption[nPlayerID];
 	Send(msg);
 }
 
@@ -267,21 +316,9 @@ void GameController::Keyboard_Down(int i_key)
 	{
 	case GLFW_KEY_SPACE:
 	{
-		//m_frogs[0]->Key_Down();
 		for (auto it : m_frogs)
 		{
-			if (it.second->m_desc.nIndex == 0)
-			{
-				it.second->Key_Down();
-			}
-		}
-		break;
-	}
-	case GLFW_KEY_ENTER:
-	{
-		for (auto it : m_frogs)
-		{
-			if (it.second->m_desc.nIndex == 1)
+			if (it.second->m_desc.nUniqueID == nPlayerID)
 			{
 				it.second->Key_Down();
 			}
@@ -301,18 +338,7 @@ void GameController::Keyboard_Up(int i_key)
 	{
 		for (auto it : m_frogs)
 		{
-			if (it.second->m_desc.nIndex == 0)
-			{
-				it.second->Key_Up();
-			}
-		}
-		break;
-	}
-	case GLFW_KEY_ENTER:
-	{
-		for (auto it : m_frogs)
-		{
-			if (it.second->m_desc.nIndex == 1)
+			if (it.second->m_desc.nUniqueID == nPlayerID)
 			{
 				it.second->Key_Up();
 			}

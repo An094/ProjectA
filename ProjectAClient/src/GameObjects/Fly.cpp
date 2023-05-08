@@ -1,24 +1,13 @@
 #include "Fly.h"
 
-Fly::Fly(float i_x, float i_y, int i_Region)
+Fly::Fly(const sFlyDescription& i_desc)
 {
-	x = i_x + rand() % 41 - 20;
-	y = i_y + rand() % 41 - 20;
-
-	vx = vx_Max;
-	vy = 0.0f;
-
-	ax = ax_Base;
-	ay = ay_Base;
-
-	Region = i_Region;
-	isAlive = false;
-
+	m_desc = i_desc;
 	m_sprite = std::make_shared<SpriteAnimation2D>("CatchFlies/FlyAni.png", "Texture", "Animation", 2, 0.1f);
-	//m_sprite = std::make_shared<SpriteAnimation2D>("gold.tga", "Texture", "Animation", 8, 0.1f);
-	m_sprite->SetPosition(x, y);
+	m_sprite->SetPosition(m_desc.nX, m_desc.nY);
 	m_sprite->SetSize(30, 18);
 }
+
 
 void Fly::Draw()
 {
@@ -29,22 +18,28 @@ void Fly::Update(float i_deltaTime)
 {
 	m_sprite->Update(i_deltaTime);
 
-	x += vx;
-	y += vy;
-	vx += ax;
-	vy += ay;
+	m_desc.nX += m_desc.nVx;
+	m_desc.nY += m_desc.nVy;
+	m_desc.nVx += m_desc.nAx;
+	m_desc.nVy += m_desc.nVy;
 
-	if (vx >= vx_Max || vx <= -vx_Max)
-		ax = vx < 0 ? ax_Base : -ax_Base;
-	if (vy >= vy_Max || vy <= -vy_Max)
-		ay = vy < 0 ? ay_Base : -ay_Base;
+	if (m_desc.nVx >= m_desc.nVxMax || m_desc.nVx <= -m_desc.nVxMax)
+		m_desc.nAx = m_desc.nVx < 0 ? m_desc.nAxBase : -m_desc.nAxBase;
+	if (m_desc.nVy >= m_desc .nVyMax || m_desc.nVy <= -m_desc.nVyMax)
+		m_desc.nAy = m_desc.nVy < 0 ? m_desc.nAyBase : -m_desc.nAyBase;
 
+	UpdatePosition();
+}
+
+void Fly::UpdateDescription(const sFlyDescription& i_desc)
+{
+	m_desc = i_desc;
 	UpdatePosition();
 }
 
 bool Fly::IsCaught(float i_x, float i_y)
 {
-	if (i_x - 20.0f < x && i_x + 20.0f > x && i_y - 6.0f < y && i_y + 34.0f > y)
+	if (i_x - 20.0f < m_desc.nX && i_x + 20.0f > m_desc.nX && i_y - 6.0f < m_desc.nY && i_y + 34.0f > m_desc.nY)
 	{
 		return true;
 	}
@@ -53,5 +48,5 @@ bool Fly::IsCaught(float i_x, float i_y)
 
 void Fly::UpdatePosition()
 {
-	m_sprite->SetPosition(x, y, YAxisPlace::Bottom);
+	m_sprite->SetPosition(m_desc.nX, m_desc.nY, YAxisPlace::Bottom);
 }

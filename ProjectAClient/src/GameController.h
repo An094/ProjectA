@@ -29,8 +29,8 @@ public:
 	{
 		return m_flies;
 	}
-private:
-	
+
+	uint32_t GetPlayerID() const { return nPlayerID; }
 
 private:
 	std::string m_mapFileName;
@@ -48,8 +48,8 @@ private:
 	uint32_t timerCount{};
 
 	///networking
-	std::unordered_map<uint32_t, sFrogDescription> mapObjects;
-	std::unordered_map<uint32_t, Frog> mapObjects1;
+	std::unordered_map<uint32_t, sFrogDescription> m_frogsDesciption;
+	std::vector<sFlyDescription> m_fliesDescription;
 	uint32_t nPlayerID = 0;
 	sFrogDescription descPlayer;
 

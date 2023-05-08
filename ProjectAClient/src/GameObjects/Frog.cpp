@@ -21,18 +21,6 @@ void Frog::InitializeSprites()
 Frog::Frog(const sFrogDescription& i_desc, GameController* i_controller)
 	:m_controller(i_controller)
 {
-	//Player = i_player;
-	////dir = 1 - i_player;
-	//dir = 0;
-	//Anim = 0;// 0 - sit, 1 - jump
-	//float Offset = 11.0f * CELL_SIZE * (-1);//(Player == 0 ? -1 : 1);
-	//x = WIDTH / 2 + Offset;
-	//y = 2 * CELL_SIZE;
-	//Prepare_stt = 0;
-	//isJumping = false;
-	//isJumpPressed = false;
-	//vx = vy = 0.0f;
-	//Score = 0;
 
 	m_desc = i_desc;
 
@@ -54,7 +42,7 @@ void Frog::UpdatePosition()
 void Frog::Draw()
 {
 	m_sprite->Draw();
-	if (!m_lines.empty())
+	if (!m_lines.empty() && m_desc.nUniqueID == m_controller->GetPlayerID())
 	{
 		for (auto it : m_lines)
 		{
@@ -89,7 +77,7 @@ void Frog::Update(float i_deltaTime)
 			else
 			{
 				m_desc.nAngle += Map_offset[m_desc.nAngle_Drt];
-				Check_Angle func = Check_Angle_Pointer[m_desc.nDrt][m_desc.nDrt];
+				Check_Angle func = Check_Angle_Pointer[m_desc.nDrt][m_desc.nAngle_Drt];
 
 				if ((this->*func)(m_desc.nAngle))
 				{
