@@ -146,9 +146,18 @@ void Frog::Update(float i_deltaTime)
 		auto it  = flies.begin();
 		while (it != flies.end()) {
 			if (it->get()->IsCaught(m_desc.nX, m_desc.nY)) {
-				it = flies.erase(it);
 				m_desc.nScore++;
 
+				if (m_desc.nUniqueID == m_controller->GetPlayerID())
+				{
+					olc::net::message<GameMsg> msg;
+					msg.header.id = GameMsg::Client_CatchFly;
+					msg << it->get()->m_desc.nRegion;
+
+					m_controller->Send(msg);
+
+				}
+				it = flies.erase(it);
 			}
 			else
 			{

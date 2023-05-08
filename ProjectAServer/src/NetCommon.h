@@ -15,6 +15,7 @@ enum class GameMsg : uint32_t
 	Client_CatchFly,
 
 	Game_AddPlayer,
+	Game_StartGame,
 	Game_RemovePlayer,
 	Game_UpdatePlayer
 };

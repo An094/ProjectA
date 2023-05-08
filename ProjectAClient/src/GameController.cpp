@@ -208,6 +208,24 @@ void GameController::UpdateScene(float i_delaTime)
 				break;
 			}
 
+			/*case (GameMsg::Client_CatchFly):
+			{
+				uint32_t region;
+				msg >> region;
+				m_fliesDescription.erase(std::remove_if(
+					m_fliesDescription.begin(), m_fliesDescription.end(),
+					[region](const sFlyDescription& x) {
+						return x.nRegion == region;
+					}), m_fliesDescription.end());
+				m_flies.erase(std::remove_if(
+					m_flies.begin(), m_flies.end(),
+					[region](const std::shared_ptr<Fly>& x) {
+						return x->m_desc.nRegion == region;
+					}), m_flies.end());
+				
+				break;
+			}*/
+
 
 			}
 		}
@@ -218,31 +236,6 @@ void GameController::UpdateScene(float i_delaTime)
 		std::cout << "Waiting to Connect" << std::endl;
 		return;
 	}
-
-	//timerCount++;
-	//if (timerCount == 90)
-	//{
-	//	timerCount = 0;
-	//	if (m_flies.size() < MAX_FLIES)
-	//	{
-	//		bool check;
-	//		int Region;
-	//		do
-	//		{
-	//			check = false;
-	//			Region = rand() % 6;
-	//			for (auto fly : m_flies)
-	//			{
-	//				//if (fly->Region == Region)
-	//				{
-	//					check = true;
-	//					break;
-	//				}
-	//			}
-	//		} while (check);
-	//		m_flies.push_back(std::make_shared<Fly>(spawnPoints[Region].x, spawnPoints[Region].y, Region));
-	//	}
-	//}
 
 
 	for (auto it : m_clouds)

@@ -11,6 +11,8 @@ public:
 	{
 	}
 
+	const uint32_t m_playersInRoom = 2;
+
 	std::unordered_map<uint32_t, sFrogDescription> m_frogRoster;
 	//std::unordered_map<uint32_t, sFlyDescription> m_flyRoster;//first is channel Id;
 	std::vector<sFlyDescription> m_flyRoster;//first is channel Id;
@@ -75,7 +77,7 @@ protected:
 			sFrogDescription desc;
 			msg >> desc;
 			desc.nUniqueID = client->GetID();
-			//an.ngothai
+
 			desc.nIndex = desc.nUniqueID % 2 == 0 ? 0 : 1;
 			float Offset = 11.0f * CELL_SIZE * (desc.nIndex == 0 ? -1 : 1);
 			desc.nX = WIDTH / 2 + Offset;
@@ -125,7 +127,16 @@ protected:
 
 		case GameMsg::Client_CatchFly:
 		{
-
+			std::cout << "Client_CatchFly" << std::endl;
+			uint32_t region;
+			msg >> region;
+			m_flyRoster.erase(std::remove_if(
+				m_flyRoster.begin(), m_flyRoster.end(),
+				[region](const sFlyDescription& x) {
+					return x.nRegion == region;
+				}), m_flyRoster.end());
+			//MessageAllClients(msg, client);
+			break;
 		}
 
 		}
@@ -150,7 +161,7 @@ public:
 			nMessageCount++;
 		}
 		//Spawn flies
-		if (m_flyRoster.size() < MAX_FLIES && m_frogRoster.size() == 2)
+		if (m_flyRoster.size() < MAX_FLIES && m_frogRoster.size() == m_playersInRoom)
 		{
 			bool check;
 			int Region;

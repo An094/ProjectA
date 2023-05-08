@@ -14,7 +14,7 @@ struct Point
 	float y;
 };
 
-class GameController : olc::net::client_interface<GameMsg>
+class GameController : public olc::net::client_interface<GameMsg>
 {
 public:
 	GameController(const std::string&);
