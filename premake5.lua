@@ -192,10 +192,11 @@ project "ProjectAClient"
 
 	links
 	{
-		"AF"
+		"AF",
+		"ProjectAServer"
 	}	
 	
-	postbuildcommands { "xcopy /i /y D:\\Objective\\bin\\%{cfg.buildcfg}-x64\\%{prj.name} D:\\Objective\\release" }
+	postbuildcommands { "xcopy /i /y $(SolutionDir)bin\\%{cfg.buildcfg}-x64\\%{prj.name} $(SolutionDir)release" }
 	
 	filter "system:windows"
 		staticruntime "Off"
@@ -243,7 +244,7 @@ project "ProjectAServer"
 	}	
 
 	
-	postbuildcommands { "xcopy /i /y D:\\Objective\\bin\\%{cfg.buildcfg}-x64\\%{prj.name} D:\\Objective\\release" }
+	postbuildcommands { "xcopy /i /y $(SolutionDir)bin\\%{cfg.buildcfg}-x64\\%{prj.name} $(SolutionDir)release" }
 	
 	filter "system:windows"
 		staticruntime "Off"

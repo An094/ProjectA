@@ -16,6 +16,13 @@ void Fly::Draw()
 
 void Fly::Update(float i_deltaTime)
 {
+	if (!m_desc.isAlive) {
+		m_scale += 0.05f;
+		if (m_scale >= 1.0f) {
+			m_scale = 1.0f;
+			m_desc.isAlive = true;
+		}
+	}
 	m_sprite->Update(i_deltaTime);
 
 	m_desc.nX += m_desc.nVx;

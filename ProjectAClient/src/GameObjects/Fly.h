@@ -14,4 +14,5 @@ private:
 	void UpdatePosition();
 private:
 	std::shared_ptr<SpriteAnimation2D> m_sprite;
+	float m_scale;
 };

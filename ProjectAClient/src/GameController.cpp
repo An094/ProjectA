@@ -65,11 +65,11 @@ GameController::GameController(const std::string& i_fileName)
 
 	//Background
 	m_background = std::make_shared<Sprite2D>("CatchFlies/Background.png");
-	m_background->SetPosition(360, 216, YAxisPlace::Bottom);
+	m_background->SetPosition(360 + MARGIN_SIZE, 216 + MARGIN_SIZE, YAxisPlace::Bottom);
 	m_background->SetSize(720, 336);
 	//Ground
 	m_ground = std::make_shared<Sprite2D>("CatchFlies/Ground.png");
-	m_ground->SetPosition(360, 24, YAxisPlace::Bottom);
+	m_ground->SetPosition(360 + MARGIN_SIZE, 24 + MARGIN_SIZE, YAxisPlace::Bottom);
 	m_ground->SetSize(720, 48);
 
 	m_platformers.reserve(numberOfPlatformer);
@@ -82,25 +82,32 @@ GameController::GameController(const std::string& i_fileName)
 	const int clP[4] = { 5,4,22,6 };
 	for (size_t i = 0; i < numberOfPlatformer; i++)
 	{
-		std::shared_ptr<Platformer> platformer = std::make_shared<Platformer>("CatchFlies/Platformer.png", m_platformMapping[i].second * CELL_SIZE, m_platformMapping[i].first * CELL_SIZE, 102, 24);
+		std::shared_ptr<Platformer> platformer = std::make_shared<Platformer>("CatchFlies/Platformer.png", m_platformMapping[i].second * CELL_SIZE + MARGIN_SIZE, m_platformMapping[i].first * CELL_SIZE + MARGIN_SIZE, 102, 24);
 		m_platformers.push_back(std::move(platformer));
 	}
 
 	for (int i = 0; i < 3; i++)
 	{
-		std::shared_ptr<Cloud> cloud = std::make_shared<Cloud>("CatchFlies/Cloud.png", cloudsPosition[2 * i], cloudsPosition[2 * i + 1], 150, 36);
+		std::shared_ptr<Cloud> cloud = std::make_shared<Cloud>("CatchFlies/Cloud.png", cloudsPosition[2 * i] + MARGIN_SIZE, cloudsPosition[2 * i + 1] + MARGIN_SIZE, 150, 36);
 		m_clouds.push_back(std::move(cloud));
 	}
 
+	std::shared_ptr<Sprite2D> Leftborder = std::make_shared<Sprite2D>("CatchFlies/Border.png");
+	Leftborder->SetPosition(40, 192);
+	Leftborder->SetSize(70, 384);
+
+	std::shared_ptr<Sprite2D> Rightborder = std::make_shared<Sprite2D>("CatchFlies/Border.png");
+	Rightborder->SetPosition(840, 192);
+	Rightborder->SetSize(70, 384);
+
+	std::shared_ptr<Sprite2D> Downborder = std::make_shared<Sprite2D>("CatchFlies/Border1.png");
+	Downborder->SetPosition(440, 424);
+	Downborder->SetSize(880, 70);
+	m_borders.push_back(std::move(Leftborder));
+	m_borders.push_back(std::move(Rightborder));
+	m_borders.push_back(std::move(Downborder));
 
 	Frog::InitializeSprites();
-	//m_frogs.reserve(2);
-	//for (int i = 0; i < 2; i++)
-	//{
-	//	auto frog = std::make_shared<Frog>(i,this);
-	//	m_frogs.push_back(std::move(frog));
-	//}
-	//
 }
 
 
@@ -208,23 +215,26 @@ void GameController::UpdateScene(float i_delaTime)
 				break;
 			}
 
-			/*case (GameMsg::Client_CatchFly):
+			case (GameMsg::Client_CatchFly):
 			{
-				uint32_t region;
-				msg >> region;
-				m_fliesDescription.erase(std::remove_if(
-					m_fliesDescription.begin(), m_fliesDescription.end(),
-					[region](const sFlyDescription& x) {
-						return x.nRegion == region;
-					}), m_fliesDescription.end());
-				m_flies.erase(std::remove_if(
-					m_flies.begin(), m_flies.end(),
-					[region](const std::shared_ptr<Fly>& x) {
-						return x->m_desc.nRegion == region;
-					}), m_flies.end());
-				
+				uint32_t uniqueID;
+				msg >> uniqueID;
+				/*auto result = std::find_if(m_frogs.begin(), m_frogs.end(),
+					[uniqueID](const std::shared_ptr<Frog>& i_frog)
+					{
+						i_frog->m_desc.nUniqueID = uniqueID;
+					});
+
+				if (result != m_frogs.end())
+				{
+					result->second->m_desc.nScore++;
+				}*/
+				//m_frogs[uniqueID]->m_desc.nScore++;
+				m_frogsDesciption[uniqueID].nScore++;
+				m_frogs[uniqueID]->m_score->score++;
+				UpdateScoreSprite();
 				break;
-			}*/
+			}
 
 
 			}
@@ -291,7 +301,7 @@ void GameController::Render()
 	}
 	for (auto it : m_borders)
 	{
-		//it->Draw();
+		it->Draw();
 	}
 	for (auto it : m_frogs)
 	{
@@ -340,5 +350,13 @@ void GameController::Keyboard_Up(int i_key)
 	}
 	default:
 		break;
+	}
+}
+
+void GameController::UpdateScoreSprite()
+{
+	for (auto& it : m_frogs)
+	{
+		it.second->m_score->UpdateSprite();
 	}
 }

@@ -31,7 +31,8 @@ public:
 	}
 
 	uint32_t GetPlayerID() const { return nPlayerID; }
-
+private:
+	void UpdateScoreSprite();
 private:
 	std::string m_mapFileName;
 	uint32_t m_numbHorizontalTile, m_numbVerticalTile;

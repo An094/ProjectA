@@ -26,6 +26,7 @@ Frog::Frog(const sFrogDescription& i_desc, GameController* i_controller)
 
 	UpdateImage();
 	UpdatePosition();
+	m_score = std::make_shared<Score>(m_desc.nIndex);
 }
 
 
@@ -46,9 +47,10 @@ void Frog::Draw()
 	{
 		for (auto it : m_lines)
 		{
-			it.Draw();
+			it->Draw();
 		}
 	}
+	m_score->Draw();
 }
 
 void Frog::Update(float i_deltaTime)
@@ -97,9 +99,9 @@ void Frog::Update(float i_deltaTime)
 					y2 += vy2;
 					if (i % 3 == 2) {
 						Angle2 = atan2(vy2, vx2) * RAD;
-						m_lines.push_back(Line(m_desc.nIndex, x2, y2, Angle2));
+						m_lines.push_back(std::make_shared<Line>(m_desc.nIndex, x2, y2, Angle2));
 					}
-					vy2 += GRAVITY;
+     				vy2 += GRAVITY;
 				}
 			}
 		}
@@ -116,16 +118,16 @@ void Frog::Update(float i_deltaTime)
 		}
 		if (m_desc.nVy <= 0.0f)
 		{
-			int col1 = (m_desc.nX - 9.0f) / CELL_SIZE;
-			int col2 = (m_desc.nX + 9.0f) / CELL_SIZE;
-			int row_old = (y_old) / CELL_SIZE;
-			int row = m_desc.nY / CELL_SIZE;
+			int col1 = (m_desc.nX - MARGIN_SIZE- 9.0f) / CELL_SIZE;
+			int col2 = (m_desc.nX - MARGIN_SIZE + 9.0f) / CELL_SIZE;
+			int row_old = (y_old - MARGIN_SIZE) / CELL_SIZE;
+			int row = ( m_desc.nY - MARGIN_SIZE )/ CELL_SIZE;
 			if (!m_controller->m_tileMatrix[row_old][col1]
 				&& !m_controller->m_tileMatrix[row_old][col2]
 				&& (m_controller->m_tileMatrix[row][col1] || m_controller->m_tileMatrix[row][col2]))
 			{
 				m_desc.nIsJumping = false;
-				m_desc.nY = (row + 1) * CELL_SIZE;
+				m_desc.nY = (row + 1) * CELL_SIZE + MARGIN_SIZE;
 				m_desc.nVx = 0.0f;
 				m_desc.nVy = 0.0f;
 				m_desc.nAnim = 0;
@@ -143,26 +145,25 @@ void Frog::Update(float i_deltaTime)
 		}
 
 		std::vector<std::shared_ptr<Fly>>& flies = m_controller->GetFlies();
-		auto it  = flies.begin();
-		while (it != flies.end()) {
-			if (it->get()->IsCaught(m_desc.nX, m_desc.nY)) {
-				m_desc.nScore++;
-
-				if (m_desc.nUniqueID == m_controller->GetPlayerID())
-				{
-					olc::net::message<GameMsg> msg;
-					msg.header.id = GameMsg::Client_CatchFly;
-					msg << it->get()->m_desc.nRegion;
-
-					m_controller->Send(msg);
-
-				}
-				it = flies.erase(it);
-			}
-			else
+	
+		auto condition = [&, this](const std::shared_ptr<Fly>& i_fly)
+		{
+			return i_fly->IsCaught(m_desc.nX, m_desc.nY);
+		};
+		auto result = std::find_if(flies.begin(), flies.end(), condition);
+		if(result != flies.end())
+		{
+			std::cout << "IsCaught" << std::endl;
+			int region = result->get()->m_desc.nRegion;
+			if (m_desc.nUniqueID == m_controller->GetPlayerID())
 			{
-				it++;
+				olc::net::message<GameMsg> msg;
+				msg.header.id = GameMsg::Client_CatchFly;
+				msg << m_desc.nUniqueID << region;
+
+				m_controller->Send(msg);
 			}
+			flies.erase(result);
 		}
 
 

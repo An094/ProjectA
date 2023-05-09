@@ -70,13 +70,56 @@ private:
 
 		void Draw()
 		{
-			m_sprite->Draw();
+			if (!this->Check_Boundary_Left(m_x) && !this->Check_Boundary_Right(m_x))
+			{
+				m_sprite->Draw();
+			}
 		}
+	private:
+		bool Check_Boundary_Left(float x) { return x < BOUNDARY_LEFT + MARGIN_SIZE; }
+		bool Check_Boundary_Right(float x) { return x > BOUNDARY_RIGHT + MARGIN_SIZE; }
 	private:
 		std::shared_ptr<Sprite2D> m_sprite;
 		int m_player;
 		float m_x, m_y, m_angle;
 	};
+	std::vector<std::shared_ptr<Line>> m_lines;
+public:
+	struct Score
+	{
+		Score(uint32_t i_side)
+		{
+			side = i_side;
+			m_sprites.reserve(10);
+			for (int i = 0; i < 10; i++)
+			{
+				char textureFile[30];
+				sprintf(textureFile, "CatchFlies/Number_%d.png", i);
+				auto sprite = std::make_shared<Sprite2D>(textureFile);
+				uint32_t xPos = 440 + 60 * (side == 0 ? -1 : 1);
+				sprite->SetPosition(xPos, 40, YAxisPlace::Bottom);
+				sprite->SetSize(36, 42);
+				m_sprites.emplace_back(std::move(sprite));
+			}
+			m_currentSprite = m_sprites[0];
+		}
 
-	std::vector<Line> m_lines;
+
+		void Draw()
+		{
+			m_currentSprite->Draw();
+		}
+
+		void UpdateSprite()
+		{
+			m_currentSprite = m_sprites[score];
+		}
+
+		std::vector<std::shared_ptr<Sprite2D>> m_sprites;
+		std::shared_ptr<Sprite2D> m_currentSprite;
+		uint32_t score{};
+		uint32_t side;
+	};
+
+	std::shared_ptr<Score> m_score;
 };

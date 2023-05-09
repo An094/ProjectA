@@ -13,6 +13,7 @@ enum class GameMsg : uint32_t
 	Client_UnregisterWithServer,
 	Client_UpdateFly,
 	Client_CatchFly,
+	Client_Jump,
 
 	Game_AddPlayer,
 	Game_StartGame,
