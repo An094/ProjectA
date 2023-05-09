@@ -47,7 +47,7 @@ private:
 	std::unordered_map<uint32_t, std::shared_ptr<Frog>> m_frogs;
 	std::vector<std::shared_ptr<Fly>> m_flies;
 	uint32_t timerCount{};
-
+	uint32_t uniqueIDofThisTurn;
 	///networking
 	std::unordered_map<uint32_t, sFrogDescription> m_frogsDesciption;
 	std::vector<sFlyDescription> m_fliesDescription;

@@ -50,7 +50,7 @@ private:
 	std::shared_ptr<Sprite2D> m_sprite;
 	static inline float Map_offset[2]{ -1.0f, 1.0f };
 	static inline float Map_Base_Angle[2]{ 160.0f, 20.0f };
-
+	bool isLanding = false;
 	class Line
 	{
 	public:

@@ -182,6 +182,12 @@ void GameController::UpdateScene(float i_delaTime)
 				break;
 			}
 
+			case (GameMsg::Game_StartGame):
+			{
+				msg >> uniqueIDofThisTurn;
+				break;
+			}
+
 			case(GameMsg::Server_SpawnFly):
 			{
 				sFlyDescription desc;
@@ -236,6 +242,11 @@ void GameController::UpdateScene(float i_delaTime)
 				break;
 			}
 
+			case (GameMsg::Client_Jump):
+			{
+				msg >> uniqueIDofThisTurn;
+				break;
+			}
 
 			}
 		}
@@ -315,6 +326,10 @@ void GameController::Render()
 
 void GameController::Keyboard_Down(int i_key)
 {
+	if (uniqueIDofThisTurn != nPlayerID)
+	{
+		return;
+	}
 	switch (i_key)
 	{
 	case GLFW_KEY_SPACE:
@@ -335,6 +350,10 @@ void GameController::Keyboard_Down(int i_key)
 
 void GameController::Keyboard_Up(int i_key)
 {
+	if (uniqueIDofThisTurn != nPlayerID)
+	{
+		return;
+	}
 	switch (i_key)
 	{
 	case GLFW_KEY_SPACE:

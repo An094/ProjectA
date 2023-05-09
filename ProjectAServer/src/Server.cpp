@@ -19,6 +19,7 @@ public:
 	const uint32_t timeToSpawn = 1;
 	int turn = 0;
 	std::vector<uint32_t> playerId;
+	uint32_t lastJumpingPlayerId;
 
 	std::unordered_map<uint32_t, sFrogDescription> m_frogRoster;
 	//std::unordered_map<uint32_t, sFlyDescription> m_flyRoster;//first is channel Id;
@@ -115,9 +116,10 @@ protected:
 
 			if (playerId.size() == m_playersInRoom)
 			{
+				lastJumpingPlayerId = playerId[0];
 				olc::net::message<GameMsg> msgStartGame;
 				msgStartGame.header.id = GameMsg::Game_StartGame;
-				msgStartGame << desc.nUniqueID;
+				msgStartGame << playerId[0];
 				MessageAllClients(msgStartGame);
 			}
 
@@ -155,28 +157,35 @@ protected:
 				}), m_flyRoster.end());
 			m_frogRoster[uniqueID].nScore++;
 
-			olc::net::message<GameMsg> msg;
-			msg.header.id = GameMsg::Client_CatchFly;
-			msg << uniqueID;
-			MessageAllClients(msg);
+			olc::net::message<GameMsg> msgCatchFly;
+			msgCatchFly.header.id = GameMsg::Client_CatchFly;
+			msgCatchFly << uniqueID;
+			MessageAllClients(msgCatchFly);
 			break;
 		}
 
 
 		case GameMsg::Client_Jump:
 		{
-
+			turn++;
+			std::cout << "Turn: " << turn;
+			uint32_t index = turn % 2;
+			olc::net::message<GameMsg> msgJump;
+			msgJump.header.id = GameMsg::Client_Jump;
+			msgJump << playerId[index];
+			MessageAllClients(msgJump);
 			break;
 		}
 
 		}
 
 	}
+
 public:
 	void Update(size_t nMaxMessages = -1, bool bWait = false) override
 	{
 		//if (bWait) m_qMessagesIn.wait();
-		
+
 		// Process as many messages as you can up to the value
 		// specified
 		size_t nMessageCount = 0;
