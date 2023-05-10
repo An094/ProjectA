@@ -19,8 +19,8 @@ public:
 	const uint32_t timeToSpawn = 1;
 	int turn = 0;
 	std::vector<uint32_t> playerId;
-	uint32_t lastJumpingPlayerId;
-
+	const float timePerTurn = 60.0f;
+	std::vector<float> remainingTime{ 2,60.0f };
 	std::unordered_map<uint32_t, sFrogDescription> m_frogRoster;
 	//std::unordered_map<uint32_t, sFlyDescription> m_flyRoster;//first is channel Id;
 	std::vector<sFlyDescription> m_flyRoster;//first is channel Id;
@@ -116,7 +116,6 @@ protected:
 
 			if (playerId.size() == m_playersInRoom)
 			{
-				lastJumpingPlayerId = playerId[0];
 				olc::net::message<GameMsg> msgStartGame;
 				msgStartGame.header.id = GameMsg::Game_StartGame;
 				msgStartGame << playerId[0];
@@ -200,40 +199,44 @@ public:
 			nMessageCount++;
 		}
 		currentTime = std::chrono::system_clock::now();
-		bool spwaningCondition = (currentTime - lastTime) >= std::chrono::seconds{ timeToSpawn };
 		//Spawn flies
-		if (spwaningCondition && m_flyRoster.size() < MAX_FLIES && m_frogRoster.size() == m_playersInRoom)
+		if ((currentTime - lastTime) >= std::chrono::seconds{ timeToSpawn })
 		{
-			bool check;
-			int Region;
-			do
+			lastTime = currentTime;
+			if (m_flyRoster.size() < MAX_FLIES && m_frogRoster.size() == m_playersInRoom)
 			{
-				check = false;
-				Region = rand() % 6;
-				for (auto fly : m_flyRoster)
+				bool check;
+				int Region;
+				do
 				{
-					if (fly.nRegion == Region)
+					check = false;
+					Region = rand() % 6;
+					for (auto fly : m_flyRoster)
 					{
-						check = true;
-						break;
+						if (fly.nRegion == Region)
+						{
+							check = true;
+							break;
+						}
 					}
-				}
-			} while (check);
-			sFlyDescription desc;
+				} while (check);
+				sFlyDescription desc;
 
-			olc::net::message<GameMsg> msgSpawnFly;
-			msgSpawnFly.header.id = GameMsg::Server_SpawnFly;
+				olc::net::message<GameMsg> msgSpawnFly;
+				msgSpawnFly.header.id = GameMsg::Server_SpawnFly;
 
 
-			desc.isAlive = false;
-			desc.nRegion = Region;
-			desc.nX = spawnPoints[Region].first + MARGIN_SIZE + rand() % 41 - 20;
-			desc.nY = spawnPoints[Region].second + MARGIN_SIZE + rand() % 41 - 20;
-			msgSpawnFly << desc;
+				desc.isAlive = false;
+				desc.nRegion = Region;
+				desc.nX = spawnPoints[Region].first + MARGIN_SIZE + rand() % 41 - 20;
+				desc.nY = spawnPoints[Region].second + MARGIN_SIZE + rand() % 41 - 20;
+				msgSpawnFly << desc;
 
-			MessageAllClients(msgSpawnFly);
+				MessageAllClients(msgSpawnFly);
 
-			m_flyRoster.push_back(std::move(desc));
+				m_flyRoster.push_back(std::move(desc));
+
+			}
 
 		}
 	}

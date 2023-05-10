@@ -48,6 +48,12 @@ private:
 	std::vector<std::shared_ptr<Fly>> m_flies;
 	uint32_t timerCount{};
 	uint32_t uniqueIDofThisTurn;
+	const float timePerTurn = 60.0f;
+	std::vector<float> remainingTime{ 60.0f, 60.0f };
+	std::shared_ptr<SpriteAnimation2D> m_hourglass;
+	std::vector<std::shared_ptr<Sprite2D>> time;
+	std::vector<std::shared_ptr<Texture>> numbers;
+	bool isStarted = false;
 	///networking
 	std::unordered_map<uint32_t, sFrogDescription> m_frogsDesciption;
 	std::vector<sFlyDescription> m_fliesDescription;

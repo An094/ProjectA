@@ -108,10 +108,37 @@ GameController::GameController(const std::string& i_fileName)
 	m_borders.push_back(std::move(Downborder));
 
 	Frog::InitializeSprites();
+
+	m_hourglass = std::make_shared<SpriteAnimation2D>("CatchFlies/Hourglass.png", "Texture", "Animation", 5, 0.25f);
+	//uint32_t offset = m_frogs[uniqueIDofThisTurn]->m_desc.nIndex == 0 ? -400 : 350;
+	//m_hourglass->SetPosition(440 + offset, 40);
+	m_hourglass->SetSize(28, 35);
+	numbers.reserve(10);
+	for (int i = 0; i < 10; i++)
+	{
+		char textureFile[30];
+		sprintf(textureFile, "CatchFlies/Number_%d.png", i);
+		auto tempTexture = ResourceManager::GetInstance()->GetTexture(textureFile);
+		numbers.emplace_back(tempTexture);
+	}
+	time.reserve(4);
+	time.emplace_back(std::make_shared<Sprite2D>("CatchFlies/Number_6.png"));
+	time.emplace_back(std::make_shared<Sprite2D>("CatchFlies/Number_0.png"));
+	time.emplace_back(std::make_shared<Sprite2D>("CatchFlies/Number_6.png"));
+	time.emplace_back(std::make_shared<Sprite2D>("CatchFlies/Number_0.png"));
+	time[0]->SetPosition(60, 40, YAxisPlace::Bottom);
+	time[0]->SetSize(24, 28);
+	time[1]->SetPosition(90, 40, YAxisPlace::Bottom);
+	time[1]->SetSize(24, 28);
+	time[2]->SetPosition(790, 40, YAxisPlace::Bottom);
+	time[2]->SetSize(24, 28);
+	time[3]->SetPosition(820, 40, YAxisPlace::Bottom);
+	time[3]->SetSize(24, 28);
+	
 }
 
 
-void GameController::UpdateScene(float i_delaTime)
+void GameController::UpdateScene(float i_deltaTime)
 {
 	////Check for incoming network messages
 	if (IsConnected())
@@ -185,6 +212,7 @@ void GameController::UpdateScene(float i_delaTime)
 			case (GameMsg::Game_StartGame):
 			{
 				msg >> uniqueIDofThisTurn;
+				isStarted = true;
 				break;
 			}
 
@@ -210,7 +238,7 @@ void GameController::UpdateScene(float i_delaTime)
 						it = desc;
 					}
 				}
-				
+
 				for (auto& it : m_flies)
 				{
 					if (it->m_desc.nRegion == desc.nRegion)
@@ -261,15 +289,15 @@ void GameController::UpdateScene(float i_delaTime)
 
 	for (auto it : m_clouds)
 	{
-		it->Update(i_delaTime);
+		it->Update(i_deltaTime);
 	}
 	for (auto it : m_frogs)
 	{
-		it.second->Update(i_delaTime);
+		it.second->Update(i_deltaTime);
 	}
 	for (auto it : m_flies)
 	{
-		it->Update(i_delaTime);
+		it->Update(i_deltaTime);
 	}
 
 
@@ -296,6 +324,25 @@ void GameController::UpdateScene(float i_delaTime)
 	msg.header.id = GameMsg::Game_UpdatePlayer;
 	msg << m_frogsDesciption[nPlayerID];
 	Send(msg);
+
+	//Timer
+	if (isStarted)
+	{
+		int index = m_frogs[uniqueIDofThisTurn]->m_desc.nIndex;
+		int offset = index == 0 ? -410 : 410;
+		m_hourglass->SetPosition(440 + offset, 40, YAxisPlace::Bottom);
+		m_hourglass->Update(i_deltaTime);
+		//if (uniqueIDofThisTurn == nPlayerID)
+		{
+			remainingTime[index] -= i_deltaTime;
+			uint32_t tmp = remainingTime[index];
+			uint32_t first = tmp / 10;
+			uint32_t second = tmp % 10;
+			time[index * 2]->ChangeTexture(numbers[first]);
+			time[index * 2 + 1]->ChangeTexture(numbers[second]);
+		}
+
+	}
 }
 
 void GameController::Render()
@@ -319,6 +366,11 @@ void GameController::Render()
 		it.second->Draw();
 	}
 	for (auto it : m_flies)
+	{
+		it->Draw();
+	}
+	m_hourglass->Draw();
+	for (auto it : time)
 	{
 		it->Draw();
 	}
