@@ -137,7 +137,8 @@ GameController::GameController(const std::string& i_fileName)
 	time[2]->SetSize(24, 28);
 	time[3]->SetPosition(820, 40, YAxisPlace::Bottom);
 	time[3]->SetSize(24, 28);
-	
+	m_waiting = std::make_shared<EngineCore::Text>("8-bit.ttf", "Waiting", 30, glm::vec3(0.05f, 0.43f, 0.1f));
+	m_waiting->SetPosition(370, 290);
 }
 
 
@@ -334,7 +335,6 @@ void GameController::UpdateScene(float i_deltaTime)
 		int index = m_frogs[uniqueIDofThisTurn]->m_desc.nIndex;
 		int offset = index == 0 ? -410 : 410;
 		m_hourglass->SetPosition(440 + offset, 40, YAxisPlace::Bottom);
-		m_hourglass->Update(i_deltaTime);
 		//if (uniqueIDofThisTurn == nPlayerID)
 		{
 			remainingTime[index] -= i_deltaTime;
@@ -350,6 +350,8 @@ void GameController::UpdateScene(float i_deltaTime)
 		}
 
 	}
+	m_hourglass->Update(i_deltaTime);
+
 }
 
 void GameController::Render()
@@ -380,6 +382,10 @@ void GameController::Render()
 	for (auto it : time)
 	{
 		it->Draw();
+	}
+	if (!isStarted)
+	{
+		m_waiting->Draw();
 	}
 }
 

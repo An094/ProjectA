@@ -54,6 +54,9 @@ private:
 	std::vector<std::shared_ptr<Sprite2D>> time;
 	std::vector<std::shared_ptr<Texture>> numbers;
 	bool isStarted = false;
+
+	//
+	std::shared_ptr<Text> m_waiting;
 	///networking
 	std::unordered_map<uint32_t, sFrogDescription> m_frogsDesciption;
 	std::vector<sFlyDescription> m_fliesDescription;

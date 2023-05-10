@@ -935,23 +935,8 @@ namespace olc
 						if (client != pIgnoreClient)
 							client->Send(msg);
 					}
-					else
-					{
-						//// The client couldnt be contacted, so assume it has
-						//// disconnected.
-						//OnClientDisconnect(client);
-						//client.reset();
 
-						//// Set this flag to then remove dead clients from container
-						//bInvalidClientExists = true;
-					}
 				}
-
-				//// Remove dead clients, all in one go - this way, we dont invalidate the
-				//// container as we iterated through it.
-				//if (bInvalidClientExists)
-				//	m_deqConnections.erase(
-				//		std::remove(m_deqConnections.begin(), m_deqConnections.end(), nullptr), m_deqConnections.end());
 			}
 
 
