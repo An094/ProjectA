@@ -1,61 +1,4 @@
-﻿/*
-	ASIO Based Networking olcPixelGameEngine Extension v1.0
-
-	Videos:
-	Part #1: https://youtu.be/2hNdkYInj4g
-	Part #2: https://youtu.be/UbjxGvrDrbw
-	Part #3: https://youtu.be/hHowZ3bWsio
-	Part #4: https://youtu.be/f_1lt9pfaEo
-
-	License (OLC-3)
-	~~~~~~~~~~~~~~~
-
-	Copyright 2018 - 2021 OneLoneCoder.com
-
-	Redistribution and use in source and binary forms, with or without
-	modification, are permitted provided that the following conditions
-	are met:
-
-	1. Redistributions or derivations of source code must retain the above
-	copyright notice, this list of conditions and the following disclaimer.
-
-	2. Redistributions or derivative works in binary form must reproduce
-	the above copyright notice. This list of conditions and the following
-	disclaimer must be reproduced in the documentation and/or other
-	materials provided with the distribution.
-
-	3. Neither the name of the copyright holder nor the names of its
-	contributors may be used to endorse or promote products derived
-	from this software without specific prior written permission.
-
-	THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-	"AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-	LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
-	A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
-	HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
-	SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
-	LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
-	DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
-	THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-	(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-	OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
-	Links
-	~~~~~
-	YouTube:	https://www.youtube.com/javidx9
-	Discord:	https://discord.gg/WhwHUMV
-	Twitter:	https://www.twitter.com/javidx9
-	Twitch:		https://www.twitch.tv/javidx9
-	GitHub:		https://www.github.com/onelonecoder
-	Homepage:	https://www.onelonecoder.com
-
-	Author
-	~~~~~~
-	David Barr, aka javidx9, �OneLoneCoder 2019, 2020, 2021
-
-*/
-
-#pragma once 
+﻿#pragma once 
 
 #include <memory>
 #include <thread>
@@ -347,14 +290,21 @@ namespace olc
 				return id;
 			}
 
+			uint32_t GetRoomID() const
+			{
+				return roomId;
+			}
+
+
 		public:
-			void ConnectToClient(olc::net::server_interface<T>* server, uint32_t uid = 0)
+			void ConnectToClient(olc::net::server_interface<T>* server, uint32_t uid = 0, uint32_t roomid = 0)
 			{
 				if (m_nOwnerType == owner::server)
 				{
 					if (m_socket.is_open())
 					{
 						id = uid;
+						roomId = roomid;
 
 						// Was: ReadHeader();
 
@@ -695,7 +645,7 @@ namespace olc
 			bool m_bConnectionEstablished = false;
 
 			uint32_t id = 0;
-
+			uint32_t roomId = 0;
 		};
 
 		// Client
@@ -813,6 +763,11 @@ namespace olc
 				Stop();
 			}
 
+			void SetMaximumPlayerInARomm(uint32_t i_number)
+			{
+				m_maximumPlayerInARoom = i_number;
+			}
+
 			// Starts the server!
 			bool Start()
 			{
@@ -882,7 +837,8 @@ namespace olc
 
 								// And very important! Issue a task to the connection's
 								// asio context to sit and wait for bytes to arrive!
-								m_deqConnections.back()->ConnectToClient(this, nIDCounter++);
+								uint32_t roomId = nIDCounter / m_maximumPlayerInARoom;
+								m_deqConnections.back()->ConnectToClient(this, nIDCounter++, roomId);
 
 								std::cout << "[" << m_deqConnections.back()->GetID() << "] Connection Approved\n";
 							}
@@ -965,6 +921,40 @@ namespace olc
 						std::remove(m_deqConnections.begin(), m_deqConnections.end(), nullptr), m_deqConnections.end());
 			}
 
+			void MessageRoom(const message<T>& msg, uint32_t roomID, std::shared_ptr<connection<T>> pIgnoreClient = nullptr)
+			{
+				bool bInvalidClientExists = false;
+
+				// Iterate through all clients in container
+				for (auto& client : m_deqConnections)
+				{
+					// Check client is connected...
+					if (client && client->IsConnected() && client->GetRoomID() == roomID)
+					{
+						// ..it is!
+						if (client != pIgnoreClient)
+							client->Send(msg);
+					}
+					else
+					{
+						//// The client couldnt be contacted, so assume it has
+						//// disconnected.
+						//OnClientDisconnect(client);
+						//client.reset();
+
+						//// Set this flag to then remove dead clients from container
+						//bInvalidClientExists = true;
+					}
+				}
+
+				//// Remove dead clients, all in one go - this way, we dont invalidate the
+				//// container as we iterated through it.
+				//if (bInvalidClientExists)
+				//	m_deqConnections.erase(
+				//		std::remove(m_deqConnections.begin(), m_deqConnections.end(), nullptr), m_deqConnections.end());
+			}
+
+
 			// Force server to respond to incoming messages
 			virtual void Update(size_t nMaxMessages = -1, bool bWait = false)
 			{
@@ -1031,6 +1021,8 @@ namespace olc
 
 			// Clients will be identified in the "wider system" via an ID
 			uint32_t nIDCounter = 10000;
+
+			uint32_t m_maximumPlayerInARoom = 2;
 		};
 	}
 }

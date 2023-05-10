@@ -24,6 +24,7 @@ enum class GameMsg : uint32_t
 struct sFrogDescription
 {
 	uint32_t nUniqueID = 0;
+	uint32_t nRoomID = 0;
 	uint32_t nIndex = 0;
 	float nX = 0.0f;
 	float nY = 0.0f;

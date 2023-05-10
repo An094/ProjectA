@@ -58,6 +58,7 @@ private:
 	std::unordered_map<uint32_t, sFrogDescription> m_frogsDesciption;
 	std::vector<sFlyDescription> m_fliesDescription;
 	uint32_t nPlayerID = 0;
+	uint32_t nRoomID = 0;
 	sFrogDescription descPlayer;
 
 	bool bWaitingForConnection = true;

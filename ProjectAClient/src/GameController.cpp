@@ -1,9 +1,12 @@
 #include "GameController.h"
 #include <algorithm>
+
+extern char* address;
+
 GameController::GameController(const std::string& i_fileName)
 {
 	//Try to connect to localhost
-	if (!Connect("127.0.0.1", 60000))
+	if (!Connect(address, 60000))
 	{
 		return;
 	}
@@ -335,6 +338,10 @@ void GameController::UpdateScene(float i_deltaTime)
 		//if (uniqueIDofThisTurn == nPlayerID)
 		{
 			remainingTime[index] -= i_deltaTime;
+			if (remainingTime[index] <= 0.0f)
+			{
+				remainingTime[index] = 0.0f;
+			}
 			uint32_t tmp = remainingTime[index];
 			uint32_t first = tmp / 10;
 			uint32_t second = tmp % 10;

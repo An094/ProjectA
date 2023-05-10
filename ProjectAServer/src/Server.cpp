@@ -11,20 +11,30 @@ public:
 	{
 		// Providing a seed value
 		srand((unsigned)time(NULL));
-		currentTime = lastTime = std::chrono::system_clock::now();
+
+		SetMaximumPlayerInARomm(m_maximumPlayerInARoom);
 	}
 
-	std::chrono::system_clock::time_point lastTime, currentTime;
-	const uint32_t m_playersInRoom = 2;
-	const uint32_t timeToSpawn = 1;
-	int turn = 0;
-	std::vector<uint32_t> playerId;
-	const float timePerTurn = 60.0f;
-	std::vector<float> remainingTime{ 2,60.0f };
-	std::unordered_map<uint32_t, sFrogDescription> m_frogRoster;
-	//std::unordered_map<uint32_t, sFlyDescription> m_flyRoster;//first is channel Id;
-	std::vector<sFlyDescription> m_flyRoster;//first is channel Id;
+	struct Room
+	{
+		Room()
+		{
+			currentTime = lastTime = std::chrono::system_clock::now();
+		}
+		uint32_t roomId = 0;
+		std::chrono::system_clock::time_point lastTime, currentTime;
+		int turn = 0;
+		std::vector<uint32_t> playerId;
+		const float countdownTime = 60.0f;
+		std::vector<float> remainingTime{ countdownTime, countdownTime };
+		std::unordered_map<uint32_t, sFrogDescription> m_frogRoster;
+		std::vector<sFlyDescription> m_flyRoster;
+	};
+
+	std::unordered_map<uint32_t, std::shared_ptr<Room>> m_rooms;
 	std::vector<uint32_t> m_vGarbageIDs;
+	const uint32_t timeToSpawn = 1;
+	const uint32_t m_maximumPlayersInRoom = 2;
 	std::vector<std::pair<float, float>> spawnPoints = { {100.0f,300.0f}, {620.0f, 300.0f}, {360.0f, 280.0f}, {360.0f, 130.0f}, {100.0f, 120.0f}, {620.0f, 120.0f} };
 protected:
 	bool OnClientConnect(std::shared_ptr<olc::net::connection<GameMsg>> client) override
@@ -46,15 +56,16 @@ protected:
 	{
 		if (client)
 		{
-			if (m_frogRoster.find(client->GetID()) == m_frogRoster.end())
+			auto& room = m_rooms.at(client->GetRoomID());
+			if (room->m_frogRoster.find(client->GetID()) == room->m_frogRoster.end())
 			{
 				// client never added to roster, so just let it disappear
 			}
 			else
 			{
-				auto& pd = m_frogRoster[client->GetID()];
+				auto& pd = room->m_frogRoster[client->GetID()];
 				std::cout << "[UNGRACEFUL REMOVAL]:" + std::to_string(pd.nUniqueID) + "\n";
-				m_frogRoster.erase(client->GetID());
+				room->m_frogRoster.erase(client->GetID());
 				m_vGarbageIDs.push_back(client->GetID());
 			}
 		}
@@ -85,13 +96,19 @@ protected:
 			sFrogDescription desc;
 			msg >> desc;
 			desc.nUniqueID = client->GetID();
-
-			desc.nIndex = desc.nUniqueID % 2 == 0 ? 0 : 1;
+			desc.nRoomID = client->GetRoomID();
+			desc.nIndex = desc.nUniqueID % m_maximumPlayersInRoom;
 			float Offset = 11.0f * CELL_SIZE * (desc.nIndex == 0 ? -1 : 1);
 			desc.nX = WIDTH / 2 + Offset + MARGIN_SIZE;
 			desc.nY = 2 * CELL_SIZE + MARGIN_SIZE;
 			desc.nDrt = 1 - desc.nIndex;
-			m_frogRoster.insert_or_assign(desc.nUniqueID, desc);
+			if (m_rooms.find(desc.nRoomID) == m_rooms.end())
+			{
+				m_rooms.insert_or_assign(desc.nRoomID, std::make_shared<Room>());
+			}
+			auto& room = m_rooms.at(desc.nRoomID);
+			room->roomId = desc.nRoomID;
+			room->m_frogRoster.insert_or_assign(desc.nUniqueID, desc);
 
 			olc::net::message<GameMsg> msgSendID;
 			msgSendID.header.id = GameMsg::Client_AssignID;
@@ -101,12 +118,12 @@ protected:
 			olc::net::message<GameMsg> msgAddPlayer;
 			msgAddPlayer.header.id = GameMsg::Game_AddPlayer;
 			msgAddPlayer << desc;
-			MessageAllClients(msgAddPlayer);
-			playerId.push_back(desc.nUniqueID);
+			MessageRoom(msgAddPlayer, room->roomId);
+			room->playerId.push_back(desc.nUniqueID);
 
 
 
-			for (const auto& player : m_frogRoster)
+			for (const auto& player : room->m_frogRoster)
 			{
 				olc::net::message<GameMsg> msgAddOtherPlayers;
 				msgAddOtherPlayers.header.id = GameMsg::Game_AddPlayer;
@@ -114,12 +131,12 @@ protected:
 				MessageClient(client, msgAddOtherPlayers);
 			}
 
-			if (playerId.size() == m_playersInRoom)
+			if (room->playerId.size() == m_maximumPlayersInRoom)
 			{
 				olc::net::message<GameMsg> msgStartGame;
 				msgStartGame.header.id = GameMsg::Game_StartGame;
-				msgStartGame << playerId[0];
-				MessageAllClients(msgStartGame);
+				msgStartGame << room->playerId[0];
+				MessageRoom(msgStartGame, room->roomId);
 			}
 
 			break;
@@ -133,13 +150,13 @@ protected:
 		case GameMsg::Game_UpdatePlayer:
 		{
 			// Simply bounce update to everyone except incoming client
-			MessageAllClients(msg, client);
+			MessageRoom(msg, client->GetRoomID(), client);
 			break;
 		}
 
 		case GameMsg::Client_UpdateFly:
 		{
-			MessageAllClients(msg, client);
+			MessageRoom(msg, client->GetRoomID(), client);
 			break;
 		}
 
@@ -149,30 +166,32 @@ protected:
 			uint32_t region, uniqueID;
 			msg >> region >> uniqueID;
 			std::cout << "region:" << region << "uniqueID" << uniqueID << std::endl;
-			m_flyRoster.erase(std::remove_if(
-				m_flyRoster.begin(), m_flyRoster.end(),
+			auto& room = m_rooms[client->GetRoomID()];
+			room->m_flyRoster.erase(std::remove_if(
+				room->m_flyRoster.begin(), room->m_flyRoster.end(),
 				[region](const sFlyDescription& x) {
 					return x.nRegion == region;
-				}), m_flyRoster.end());
-			m_frogRoster[uniqueID].nScore++;
+				}), room->m_flyRoster.end());
+			room->m_frogRoster[uniqueID].nScore++;
 
 			olc::net::message<GameMsg> msgCatchFly;
 			msgCatchFly.header.id = GameMsg::Client_CatchFly;
 			msgCatchFly << uniqueID;
-			MessageAllClients(msgCatchFly);
+			MessageRoom(msgCatchFly, client->GetRoomID());
 			break;
 		}
 
 
 		case GameMsg::Client_Jump:
 		{
-			turn++;
-			std::cout << "Turn: " << turn;
-			uint32_t index = turn % 2;
+			auto& room = m_rooms[client->GetRoomID()];
+			room->turn++;
+			std::cout << "Turn: " << room->turn;
+			uint32_t index = room->turn % 2;
 			olc::net::message<GameMsg> msgJump;
 			msgJump.header.id = GameMsg::Client_Jump;
-			msgJump << playerId[index];
-			MessageAllClients(msgJump);
+			msgJump << room->playerId[index];
+			MessageRoom(msgJump, client->GetRoomID());
 			break;
 		}
 
@@ -198,46 +217,49 @@ public:
 
 			nMessageCount++;
 		}
-		currentTime = std::chrono::system_clock::now();
-		//Spawn flies
-		if ((currentTime - lastTime) >= std::chrono::seconds{ timeToSpawn })
+		for (auto& it : m_rooms)
 		{
-			lastTime = currentTime;
-			if (m_flyRoster.size() < MAX_FLIES && m_frogRoster.size() == m_playersInRoom)
+			it.second->currentTime = std::chrono::system_clock::now();
+			//Spawn flies
+			if ((it.second->currentTime - it.second->lastTime) >= std::chrono::seconds{ timeToSpawn })
 			{
-				bool check;
-				int Region;
-				do
+				it.second->lastTime = it.second->currentTime;
+				if (it.second->m_flyRoster.size() < MAX_FLIES && it.second->m_frogRoster.size() == m_maximumPlayersInRoom)
 				{
-					check = false;
-					Region = rand() % 6;
-					for (auto fly : m_flyRoster)
+					bool check;
+					int Region;
+					do
 					{
-						if (fly.nRegion == Region)
+						check = false;
+						Region = rand() % 6;
+						for (auto fly : it.second->m_flyRoster)
 						{
-							check = true;
-							break;
+							if (fly.nRegion == Region)
+							{
+								check = true;
+								break;
+							}
 						}
-					}
-				} while (check);
-				sFlyDescription desc;
+					} while (check);
+					sFlyDescription desc;
 
-				olc::net::message<GameMsg> msgSpawnFly;
-				msgSpawnFly.header.id = GameMsg::Server_SpawnFly;
+					olc::net::message<GameMsg> msgSpawnFly;
+					msgSpawnFly.header.id = GameMsg::Server_SpawnFly;
 
 
-				desc.isAlive = false;
-				desc.nRegion = Region;
-				desc.nX = spawnPoints[Region].first + MARGIN_SIZE + rand() % 41 - 20;
-				desc.nY = spawnPoints[Region].second + MARGIN_SIZE + rand() % 41 - 20;
-				msgSpawnFly << desc;
+					desc.isAlive = false;
+					desc.nRegion = Region;
+					desc.nX = spawnPoints[Region].first + MARGIN_SIZE + rand() % 41 - 20;
+					desc.nY = spawnPoints[Region].second + MARGIN_SIZE + rand() % 41 - 20;
+					msgSpawnFly << desc;
 
-				MessageAllClients(msgSpawnFly);
+					MessageRoom(msgSpawnFly, it.first);
 
-				m_flyRoster.push_back(std::move(desc));
+					it.second->m_flyRoster.push_back(std::move(desc));
+
+				}
 
 			}
-
 		}
 	}
 };
