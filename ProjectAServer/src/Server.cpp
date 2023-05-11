@@ -29,6 +29,7 @@ public:
 		std::vector<float> remainingTime{ countdownTime, countdownTime };
 		std::unordered_map<uint32_t, sFrogDescription> m_frogRoster;
 		std::vector<sFlyDescription> m_flyRoster;
+		bool isGameOver = false;
 	};
 
 	std::unordered_map<uint32_t, std::shared_ptr<Room>> m_rooms;
@@ -195,7 +196,32 @@ protected:
 			break;
 		}
 
+
+		case GameMsg::Game_GameOver:
+		{
+			auto& room = m_rooms[client->GetRoomID()];
+			if (!room->isGameOver)
+			{
+				uint32_t winPId = 0;
+				uint32_t maxScore = 0;
+				for (auto& it : room->m_frogRoster)
+				{
+					if (maxScore <= it.second.nScore);
+					{
+						maxScore = it.second.nScore;
+						winPId = it.first;
+					}
+				}
+				olc::net::message<GameMsg> msgGO;
+				msgGO.header.id = GameMsg::Game_GameOver;
+				msgGO << winPId;
+				MessageRoom(msgGO, client->GetRoomID());
+			}
+			break;
 		}
+
+		}
+
 
 	}
 

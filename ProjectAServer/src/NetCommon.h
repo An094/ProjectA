@@ -3,8 +3,6 @@
 #include <olc_Network.h>
 enum class GameMsg : uint32_t
 {
-	Server_GetStatus,
-	Server_GetPing,
 	Server_SpawnFly,
 
 	Client_Accepted,
@@ -18,7 +16,8 @@ enum class GameMsg : uint32_t
 	Game_AddPlayer,
 	Game_StartGame,
 	Game_RemovePlayer,
-	Game_UpdatePlayer
+	Game_UpdatePlayer,
+	Game_GameOver
 };
 
 struct sFrogDescription

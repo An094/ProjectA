@@ -1,4 +1,5 @@
 #include "GameController.h"
+#include "GameStates/GSGameOver.h"
 #include <algorithm>
 
 extern char* address;
@@ -276,9 +277,32 @@ void GameController::UpdateScene(float i_deltaTime)
 
 			case (GameMsg::Client_Jump):
 			{
-				msg >> uniqueIDofThisTurn;
+				uint32_t tmpId;
+				msg >> tmpId;
+				uint32_t index = m_frogsDesciption[tmpId].nIndex;
+				if (remainingTime[index] > 0.0f)
+				{
+					uniqueIDofThisTurn = tmpId;
+				}
 				break;
 			}
+
+			case (GameMsg::Game_GameOver):
+			{
+				uint32_t winPId;
+				msg >> winPId;
+				if (winPId == nPlayerID)
+				{
+					GSGameOver::UpdateResult(true);
+				}
+				else
+				{
+					GSGameOver::UpdateResult(false);
+				}
+
+				GameStateMachine::GetInstance()->ChangeState(2);
+			}
+
 
 			}
 		}
@@ -348,7 +372,14 @@ void GameController::UpdateScene(float i_deltaTime)
 			time[index * 2]->ChangeTexture(numbers[first]);
 			time[index * 2 + 1]->ChangeTexture(numbers[second]);
 		}
-
+		if (remainingTime[index] <= 0.0f && remainingTime[1 - index] <= 0.0f)
+		{
+			//GameOver
+			olc::net::message<GameMsg> msg;
+			msg.header.id = GameMsg::Game_GameOver;
+			//msg << m_frogsDesciption[nPlayerID];
+			Send(msg);
+		}
 	}
 	m_hourglass->Update(i_deltaTime);
 
